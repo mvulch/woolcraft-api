@@ -1,0 +1,63 @@
+from django.db import models
+from django.conf import settings
+
+# Create your models here.
+class Category(models.Model):
+    name = models.CharField(max_length=120, blank=False,unique=True)
+    description = models.TextField(blank=True)
+    slug = models.SlugField(max_length=100, blank=False,unique=True)
+    parent = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True,related_name="subcategories")
+
+    class Meta:
+        verbose_name = 'category'
+        verbose_name_plural = 'categories'
+
+    def __str__(self):
+        return self.name
+
+class Product(models.Model):
+    name = models.CharField(max_length=120, blank=False)
+    description = models.TextField(blank=True)
+    price = models.DecimalField(max_digits=8, decimal_places=2)
+    stock_quantity = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT,related_name="created_products")
+    updated_at = models.DateTimeField(auto_now=True)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, blank=False)
+    slug = models.SlugField(max_length=100, blank=False,unique=True)
+
+    def __str__(self):
+        return self.name
+
+class ProductAttribute(models.Model):
+    product = models.ForeignKey(Product,on_delete = models.CASCADE,related_name="attributes")
+    name = models.CharField(max_length=50)
+    value = models.CharField(max_length=50)
+
+    def __str__(self):
+        return f"{self.product.name} - {self.name}: {self.value}"
+
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product,on_delete = models.CASCADE, related_name="images")
+    image = models.ImageField(upload_to="products/")
+    is_primary = models.BooleanField(default=False)
+    alt_text = models.CharField(max_length=120, blank=True)
+
+    def __str__(self):
+        return f"Image for {self.product.name}"
+
+class VideoCourse(models.Model):
+
+    class Difficulty(models.TextChoices):
+        BEGINNER = "BEGINNER", "Beginner"
+        INTERMEDIATE = "INTERMEDIATE", "Intermediate"
+        ADVANCED = "ADVANCED", "Advanced"
+
+    product = models.OneToOneField(Product, on_delete=models.CASCADE, related_name = "video_course")
+    video_url = models.URLField(max_length=500, blank=False)
+    duration_minutes = models.PositiveIntegerField(blank=False)
+    difficulty = models.CharField(max_length=20, choices=Difficulty.choices,default=Difficulty.BEGINNER)
+
+    def __str__(self):
+        return self.product.name

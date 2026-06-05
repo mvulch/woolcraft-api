@@ -1,0 +1,15 @@
+from django.contrib import admin
+from .models import ChatSession, ChatMessage
+# Register your models here.
+@admin.register(ChatSession)
+class ChatSessionAdmin(admin.ModelAdmin):
+    list_display = ("user","started_at","last_activity_at")
+    search_fields = ("user__email",)
+    readonly_fields = ("started_at","last_activity_at")
+
+@admin.register(ChatMessage)
+class ChatMessageAdmin(admin.ModelAdmin):
+    list_display = ("chat_session","created_at","is_from_user")
+    search_fields = ("text","chat_session__id")
+    list_filter = ("is_from_user",)
+    readonly_fields = ("created_at",)

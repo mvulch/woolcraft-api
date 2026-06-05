@@ -1,0 +1,26 @@
+# Environment variables
+.env
+
+# Virtual environment
+venv/
+
+# Media uploads
+media/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# IDE
+.idea/
+.vscode/
+
+# OS files
+Thumbs.db
+
+# Database
+*.sqlite3
+
+# Logs
+*.log
+pip-log.txt
