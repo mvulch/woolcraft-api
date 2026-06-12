@@ -7,7 +7,7 @@ class EmailBackend(ModelBackend):
         if username is None or password is None:
             return None
         try:
-            # iexact - търсене без значение на главни/малки букви
+            # iexact - search both normal and capital letters
             user = UserModel.objects.get(email__iexact=username)
         except UserModel.DoesNotExist:
             return None
