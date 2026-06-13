@@ -25,6 +25,11 @@
                            placeholder="Username"
                            required>
                     <label for="{{ form.username.id_for_label }}">Потребителско име</label>
+                    {% if form.username.errors %}
+                        <div class="text-danger small">
+                            {{ form.username.errors }}
+                        </div>
+                    {% endif %}
                 </div>
                 <div class="form-floating mb-3">
                     <input type="email"
@@ -35,6 +40,11 @@
                            placeholder="name@ecample.com"
                            required>
                     <label for="{{ form.email.id_for_label }}">Имейл адрес</label>
+                    {% if form.email.errors %}
+                        <div class="text-danger small">
+                            {{ form.email.errors }}
+                        </div>
+                    {% endif %}
                 </div>
 
                 <div class="row">
@@ -63,6 +73,7 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="form-floating mb-4">
                     <input type="password"
                            name="{{ form.password.name }}"
@@ -71,6 +82,9 @@
                            placeholder="Password"
                            required>
                     <label for="{{ form.password.id_for_label }}">Парола</label>
+                    {% if form.password.errors %}
+                        <div class="text-danger">{{ form.password.errors }}</div>
+                    {% endif %}
                 </div>
                 <div class="form-floating mb-4">
                     <input type="password"
@@ -80,6 +94,9 @@
                            placeholder="Password"
                            required>
                     <label for="{{ form.confirm_password.id_for_label }}">Потвърдете парола</label>
+                    {% if form.confirm_password.errors %}
+                        <div class="text-danger small">{{ form.confirm_password.errors }}</div>
+                    {% endif %}
                 </div>
                 <button type="submit" class="btn btn-primary w-100">Регистрирай се</button>
 

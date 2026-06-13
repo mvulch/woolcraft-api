@@ -27,11 +27,11 @@ class RegistrationForm(forms.ModelForm):
             raise forms.ValidationError("Този имейл адрес вече е регистриран.")
         return email
 
-    def clean(self):
+    def clean_confirm_password(self):
         cleaned_data = super().clean()
         password = cleaned_data.get('password')
-        confirm_pass = cleaned_data.get('confirm_pass')
-        if password and confirm_pass and password != confirm_pass:
+        confirm_password = cleaned_data.get('confirm_password')
+        if password and confirm_password and password != confirm_password:
             raise forms.ValidationError("Паролите не съвпадат.")
 
         return cleaned_data

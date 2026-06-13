@@ -4,17 +4,14 @@ from django.contrib import messages
 
 from .forms import RegistrationForm, LoginForm
 # Create your views here.
-def register_view_test(request):
+def register_view(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
-
         if form.is_valid():
-            print(f"is ok")
             form.save()
             messages.success(request, "Регистрацията е успешна. Влезте в профила си.")
             return redirect('accounts:login')
     else:
-
         form = RegistrationForm()
         print(form.errors)
 
@@ -32,7 +29,6 @@ def login_view(request):
 
             if user is not None:
                 login(request, user)
-                print("OK")
                 return redirect('accounts:login')
                 # return redirect('home')
             else:
