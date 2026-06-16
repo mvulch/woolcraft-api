@@ -27,7 +27,7 @@
                     <label for="{{ form.username.id_for_label }}">Потребителско име</label>
                     {% if form.username.errors %}
                         <div class="text-danger small">
-                            {{ form.username.errors }}
+                            {{ form.username.errors|striptags }}
                         </div>
                     {% endif %}
                 </div>
@@ -42,7 +42,7 @@
                     <label for="{{ form.email.id_for_label }}">Имейл адрес</label>
                     {% if form.email.errors %}
                         <div class="text-danger small">
-                            {{ form.email.errors }}
+                            {{ form.email.errors|striptags }}
                         </div>
                     {% endif %}
                 </div>
@@ -83,7 +83,7 @@
                            required>
                     <label for="{{ form.password.id_for_label }}">Парола</label>
                     {% if form.password.errors %}
-                        <div class="text-danger">{{ form.password.errors }}</div>
+                        <div class="text-danger">{{ form.password.errors|striptags }}</div>
                     {% endif %}
                 </div>
                 <div class="form-floating mb-4">
@@ -95,7 +95,7 @@
                            required>
                     <label for="{{ form.confirm_password.id_for_label }}">Потвърдете парола</label>
                     {% if form.confirm_password.errors %}
-                        <div class="text-danger small">{{ form.confirm_password.errors }}</div>
+                        <div class="text-danger small">{{ form.confirm_password.errors|striptags }}</div>
                     {% endif %}
                 </div>
                 <button type="submit" class="btn btn-primary w-100">Регистрирай се</button>

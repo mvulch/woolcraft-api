@@ -32,6 +32,8 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 AUTHENTICATION_BACKENDS = ['accounts.backends.EmailBackend']
+LOGIN_URL = 'accounts:login'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -83,7 +85,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LANGUAGE_CODE = 'en'  #'bg'
+LANGUAGE_CODE = 'bg'  #'bg'
 TIME_ZONE = 'Europe/Sofia'
 
 USE_I18N = True
