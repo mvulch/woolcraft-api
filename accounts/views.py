@@ -8,6 +8,8 @@ from django.urls import reverse_lazy
 from .forms import RegistrationForm, LoginForm
 # Create your views here.
 def register_view(request):
+    if request.user.is_authenticated:
+        return redirect('accounts:profile')
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
@@ -46,6 +48,7 @@ def login_view(request):
 
 @login_required
 def profile_view(request):
+    print(f"Context user is: {request.user}")
     return render(request, 'accounts/profile.html', {'user': request.user})
 
 class CustomPasswordChangeView(PasswordChangeView):
