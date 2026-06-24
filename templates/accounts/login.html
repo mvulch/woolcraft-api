@@ -2,45 +2,20 @@
 {% block title %}Вход{% endblock %}
 {% block content %}
 <div class="row justify-content-center mt-5">
-        <div class="col-12 col-lg-6">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif%}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-
-            <h2 class="mb-4">Вход в профила</h2>
-            <form method="post">
-                {% csrf_token %}
-
-                <div class="form-floating mb-3">
-                    <input type="email"
-                           name="{{ form.email.name }}"
-                           class="form-control"
-                           id="{{ form.email.id_for_label }}"
-                           value="{{ form.email.value|default:'' }}"
-                           placeholder="name@ecample.com"
-                           required>
-                    <label for="{{ form.email.id_for_label }}">Имейл адрес</label>
-                </div>
-                <div class="form-floating mb-4">
-                    <input type="password"
-                           name="{{ form.password.name }}"
-                           class="form-control"
-                           id="{{ form.password.id_for_label }}"
-                           placeholder="Password"
-                           required>
-                    <label for="{{ form.password.id_for_label }}">Парола</label>
-
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Вход</button>
-                <p class="text-center mt-2 mb-0">
-                    Нямате профил? <a href="{% url 'accounts:register' %}">Регистрирайте се</a>
-                </p>
-            </form>
-
+    <div class="col-12 col-lg-6">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif%}">
+            {{ message }}
         </div>
+        {% endfor %}
+        {% endif %}
+
+        <h2 class="mb-4">Вход в профила</h2>
+        <form method="post">
+            {% include 'accounts/includes/login_form.html' %}
+        </form>
+
+    </div>
 </div>
 {% endblock %}

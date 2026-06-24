@@ -36,8 +36,8 @@ def login_view(request):
 
             if user is not None:
                 login(request, user)
-                return redirect('accounts:profile')
-                # return redirect('home')
+                # return redirect('accounts:profile')
+                return redirect('home')
             else:
                 messages.error(request, "Грешен имейл или парола.")
         else:
@@ -56,4 +56,4 @@ class CustomPasswordChangeView(PasswordChangeView):
     success_url = reverse_lazy('accounts:profile')
 
 class CustomLogoutView(LogoutView):
-    next_page = 'accounts:login' # home
+    next_page = 'home'
