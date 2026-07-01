@@ -5,6 +5,7 @@ from django.conf import settings
 class Category(models.Model):
     name = models.CharField(max_length=120, blank=False,unique=True)
     description = models.TextField(blank=True)
+    image = models.ImageField(upload_to='categories/', blank=True, null=True)
     slug = models.SlugField(max_length=100, blank=False,unique=True)
     parent = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True,related_name="subcategories")
 

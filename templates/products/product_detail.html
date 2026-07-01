@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+Продукт
+{% for attr in product_detail.attributes.all %}
+    <li>
+        <strong>{{ attr.name }}:</strong> {{ attr.value }}
+    </li>
+{% endfor %}
+{% if product_detail.video_course %}
+    <h5>Видео курс</h5>
+    <p>Трудност: {{ product_detail.video_course.difficulty }}</p>
+    <p>Времетраене: {{ product_detail.video_course.duration_minutes }} минути</p>
+{% endif %}
+{% for image in product_detail.images.all %}
+    <img src="{{ image.image.url }}" alt="{{ image.alt_text }}">
+{% endfor %}
+{% endblock %}

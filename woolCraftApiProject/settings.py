@@ -94,8 +94,9 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-
+STATIC_ROOT = ''
 STATIC_URL = 'static/'
+STATICFILES_DIRS = ('static',)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 # Default primary key field type

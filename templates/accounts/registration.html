@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Регистрация{% endblock %}
 {% block content %}
 
@@ -98,7 +99,7 @@
                         <div class="text-danger small">{{ form.confirm_password.errors|striptags }}</div>
                     {% endif %}
                 </div>
-                <button type="submit" class="btn btn-primary w-100">Регистрирай се</button>
+                <button type="submit" class="btn btn-primary w-100 mb-5">Регистрирай се</button>
 
             </form>
         </div>

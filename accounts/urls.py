@@ -8,6 +8,6 @@ urlpatterns = [
     path('login/', login_view, name='login'),
     path('profile/', profile_view, name='profile'),
     path('password-change/', CustomPasswordChangeView.as_view(template_name='accounts/password_change.html'), name='password_change'),
-    path('logout', CustomLogoutView.as_view(), name='logout'),
+    path('logout/', CustomLogoutView.as_view(), name='logout'),
 
 ]

@@ -18,6 +18,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
+from products import views
 
 
 urlpatterns = [
@@ -27,6 +28,7 @@ urlpatterns = [
     path('orders/', include('orders.urls')),
     path('custom_requests/', include('custom_requests.urls')),
     path("communication/", include('communication.urls')),
+    path('',views.home_view, name='home'),
 ]
 
 if settings.DEBUG:
