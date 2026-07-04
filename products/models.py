@@ -28,6 +28,9 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.PROTECT, blank=False)
     slug = models.SlugField(max_length=100, blank=False,unique=True)
 
+    def get_main_image(self):
+        return self.images.filter(is_primary=True).first() or self.images.first()
+
     def __str__(self):
         return self.name
 

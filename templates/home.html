@@ -3,6 +3,9 @@
 {% block title %}WoolCraft{% endblock %}
 
 {% block content %}
+<div class="container p-0">
+
+
 <div class="row mb-5">
     <div class="col-12">
         <div class="p-5 text-center bg-light rounded shadow-sm banner-section">
@@ -70,21 +73,18 @@
                     {% endif %}
                     <div class="col-6 col-md-3">
                         <div class="card h-100 shadow-sm border-0">
-                            {% if product.images.all  %}
-                                {% for img in product.images.all %}
-                                    {% if img.is_primary %}
-                                        <img src="{{ img.image.url }}"
-                                             class="card-img-top"
-                                             alt="{{ product.name }}"
-                                             style="height: 220px; object-fit: cover;">
-                                    {% endif %}
-                                {% endfor %}
-                            {% else %}
-                            <div class="bg-light d-flex align-items-center justify-content-center"
-                                 style="height: 220px;">
-                                <i class="bi bi-tag text-muted fs-1"></i>
-                            </div>
-                            {% endif %}
+                            {% with main_image=product.get_main_image %}
+                                {% if main_image %}
+                                    <img src="{{ main_image.image.url }}" class="card-img-top"
+                                         alt="{{ product.name }}"
+                                         style="height: 220px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="bg-light d-flex align-items-center justify-content-center"
+                                         style="height: 220px;">
+                                        <i class="bi bi-tag text-muted fs-1"></i>
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
 
                             <div class="card-body d-flex flex-column p-3">
                                 <p class="text-muted small mb-1">{{ product.category.name }}</p>
@@ -129,6 +129,6 @@
         <h3 class="fw-bold text-dark border-bottom border-success border-3 pb-2 mb-0">Предложени статии</h3>
     </div>
 </div>
-
+</div>
 
 {% endblock %}

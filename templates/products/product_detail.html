@@ -1,19 +1,90 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}{{ product.name }}{% endblock %}
+
 {% block content %}
-Продукт
-{% for attr in product_detail.attributes.all %}
-    <li>
-        <strong>{{ attr.name }}:</strong> {{ attr.value }}
-    </li>
-{% endfor %}
-{% if product_detail.video_course %}
-    <h5>Видео курс</h5>
-    <p>Трудност: {{ product_detail.video_course.difficulty }}</p>
-    <p>Времетраене: {{ product_detail.video_course.duration_minutes }} минути</p>
-{% endif %}
-{% for image in product_detail.images.all %}
-    <img src="{{ image.image.url }}" alt="{{ image.alt_text }}">
-{% endfor %}
+<div class="container p-0 py-2">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'products:all_products' %}" class="text-decoration-none">Магазин</a>
+            </li>
+            {% if product.category %}
+                {% if product.category.parent %}
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'products:category_products' product.category.parent.slug %}" class="text-decoration-none">{{ product.category.parent.name }}</a>
+                    </li>
+                {% endif %}
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'products:category_products' product.category.slug %}" class="text-decoration-none">{{ product.category.name }}</a>
+                    </li>
+            {% endif %}
+            <li class="breadcrumb-item active">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <div class="col-12 col-md-6">
+            {% with main_image=product.get_main_image %}
+            {% if main_image %}
+            <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                 style="height:450px width: 100% overflow: hidden">
+                <img src="{{ main_image.image.url }}"
+                     class="card-img-top"
+                     alt="{{ product.name }}"
+                     style="max-height: 500px; object-fit: cover;"
+                     id="main-product-img">
+            </div>
+                {% if product.images.all|length > 1 %}
+                    <div class="d-flex gap-2 mt-2 flex-wrap">
+                        {% for img in product.images.all %}
+                        <img src="{{ img.image.url }}"
+                             alt="{{ img.alt_text|default:product.name }}"
+                             class="rounded border"
+                             style="width: 70px; height: 70px; object-fit: cover; cursor: pointer;"
+                             onclick="document.getElementById('main-product-img').src='{{ img.image.url }}'">
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% else %}
+            <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                 style="height: 500px;">
+                <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
+            </div>
+            {% endif %}
+            {% endwith %}
+
+        </div>
+
+        <div class="col-12 col-md-6 ">
+            <h1 class="h1">{{ product.name }}</h1>
+            {% if product.stock_quantity > 0 %}
+                <span class="badge bg-success mb-4 mt-3">В наличност</span>
+                <span class="text-muted">{{ product.stock_quantity }} останали бройки.</span>
+            {% else %}
+                <span class="badge bg-secondary mb-3">Изчерпан</span>
+            {% endif %}
+            <p class="fs-4 text-primary fw-bold">{{ product.price }} евро</p>
+
+            {% if product.attributes.all %}
+                <h4 class="h4 mt-4">Характеристики:</h4>
+                {% for attr in product.attributes.all %}
+                    <p class="text-muted mb-1">{{ attr.name }}: {{ attr.value }}</p>
+                {% endfor %}
+            {% endif %}
+
+            {% if product.description %}
+                <h4 class="h4 mt-4">Описание:</h4>
+                <p class="text-muted">{{ product.description }}</p>
+            {% endif %}
+
+            <div class="d-flex gap-2 mt-4">
+                <button class="btn btn-primary px-4" {% if product.stock_quantity == 0 %}disabled{% endif %}>
+                    <i class="bi bi-cart-plus me-1"></i>Добави в количката
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
