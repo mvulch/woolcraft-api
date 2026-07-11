@@ -98,6 +98,12 @@
                                         <i class="bi bi-eye" title="Преглед"></i>
                                     </a>
 
+                                    <form method="post" action="{% url 'orders:add_to_cart' product.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm rounded-circle px-2 py-1" title="Добави в количката">
+                                            <i class="bi bi-cart-plus"></i>
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>

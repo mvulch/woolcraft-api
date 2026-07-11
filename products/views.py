@@ -2,6 +2,7 @@ from django.db.models import Q
 from django.shortcuts import render, get_object_or_404
 from .models import Product, Category
 from django.core.paginator import Paginator
+from orders.models import Cart
 
 # Create your views here.
 def home_view(request):
@@ -12,7 +13,22 @@ def product_detail_view(request,category_slug,slug):
     product_detail = get_object_or_404(Product.objects
                                        .select_related('category','video_course')
                                        .prefetch_related('attributes', 'images'), is_active=True,slug=slug, category__slug=category_slug)
-    return render(request, 'products/product_detail.html', {'product': product_detail})
+    quantity_in_cart = 0
+    if request.user.is_authenticated:
+        cart = Cart.objects.filter(user=request.user).first()
+    else:
+        cart = Cart.objects.filter(session_key=request.session.session_key).first()
+
+    if cart:
+        cart_item = cart.item.filter(product=product_detail).first()
+        if cart_item:
+            quantity_in_cart = cart_item.quantity
+
+    context = {
+        'product': product_detail,
+        'max_quantity': product_detail.stock_quantity - quantity_in_cart
+    }
+    return render(request, 'products/product_detail.html', context)
 
 def category_products_view(request, category_slug=None):
     # all main categories

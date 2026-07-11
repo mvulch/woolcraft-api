@@ -61,7 +61,7 @@
             <h1 class="h1">{{ product.name }}</h1>
             {% if product.stock_quantity > 0 %}
                 <span class="badge bg-success mb-4 mt-3">В наличност</span>
-                <span class="text-muted">{{ product.stock_quantity }} останали бройки.</span>
+                <span class="text-muted">{{ product.stock_quantity }} налични бройки.</span>
             {% else %}
                 <span class="badge bg-secondary mb-3">Изчерпан</span>
             {% endif %}
@@ -79,11 +79,28 @@
                 <p class="text-muted">{{ product.description }}</p>
             {% endif %}
 
-            <div class="d-flex gap-2 mt-4">
-                <button class="btn btn-primary px-4" {% if product.stock_quantity == 0 %}disabled{% endif %}>
-                    <i class="bi bi-cart-plus me-1"></i>Добави в количката
-                </button>
-            </div>
+            <div class="d-flex gap-2 mt-4 align-items-center">
+            <form action="{% url 'orders:add_to_cart' product.id %}" method="POST" class="d-flex gap-2">
+                {% csrf_token %}
+
+                {% if max_quantity > 0 %}
+                    <input type="number"
+                               name="quantity"
+                               value="1"
+                               min="1"
+                               max="{{ max_quantity }}"
+                               class="form-control w-auto"
+                               style="max-width: 80px;">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-cart-plus me-1"></i>Добави в количката
+                    </button>
+                {% else %}
+                    <button type="button" class="btn btn-secondary px-4" disabled>
+                        <i class="bi bi-x-circle me-1"></i>Всички наличности бяха добавени в количката ви.
+                    </button>
+                {% endif %}
+            </form>
+</div>
         </div>
     </div>
 </div>

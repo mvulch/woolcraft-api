@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Количка{% endblock %}
+
+{% block content %}
+<h1 class="h3 fw-bold mb-4">Моята количка</h1>
+
+    <!-- if there are not any items added -->
+{% if not cart or not items %}
+    <div class="text-center py-5">
+        <i class="bi bi-cart-x text-muted" style="font-size: 4rem;"></i>
+        <p class="text-muted mt-3 fs-5">Количката ти е празна.</p>
+        <a href="{% url 'products:all_products' %}" class="btn btn-success mt-2">
+            <i class="bi bi-arrow-left me-1"></i> Разгледай продуктите
+        </a>
+    </div>
+
+{% else %}
+<div class="row g-4 align-items-start">
+
+    <!-- if there are items added -->
+    <div class="col-12 col-lg-8">
+        {% for item in items %}
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body p-3">
+                <div class="row align-items-center g-2">
+
+                    <div class="col-3 col-md-2">
+                        {% with main_image=item.product.get_main_image %}
+                            {% if main_image %}
+                                <img src="{{ main_image.image.url }}"
+                                     alt="{{ item.product.name }}"
+                                     class="img-fluid rounded"
+                                     style="height: 100px; width: 100px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                     style="height: 100px; width: 100px;">
+                                    <i class="bi bi-tag text-muted"></i>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+
+                    <div class="col-9 col-md-4">
+                        <a href="{% url 'products:product_detail' item.product.category.slug item.product.slug %}"
+                           class="text-decoration-none text-dark fw-medium d-block text-truncate">
+                            {{ item.product.name }}
+                        </a>
+                        <p class="text-muted small mb-0">{{ item.product.category.name }}</p>
+                        <p class="text-success fw-bold mb-0">{{ item.product.price }} €</p>
+                    </div>
+
+                    <div class="col-6 col-md-4">
+                        <form method="post" action="{% url 'orders:update_cart' item.id %}">
+                            {% csrf_token %}
+                            <div class="input-group input-group-sm" style="max-width: 120px;">
+                                <button class="btn btn-outline-secondary" type="submit"
+                                        name="action" value="decrease">−</button>
+                                <span class="input-group-text bg-white px-3">{{ item.quantity }}</span>
+                                <button class="btn btn-outline-secondary" type="submit"
+                                        name="action" value="increase">+</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="col-6 col-md-2 text-end">
+                        <p class="fw-bold mb-2">{{ item.get_subtotal }} €</p>
+                        <form method="post" action="{% url 'orders:remove_from_cart' item.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm sticky-top" style="top: 80px; z-index: 0;">
+            <div class="card-body">
+                <h5 class="fw-bold mb-3">Обобщение</h5>
+
+                {% for item in items %}
+                <div class="d-flex justify-content-between mb-1 small">
+                    <span class="text-muted text-truncate me-2">{{ item.product.name }}</span>
+                    <span>{{ item.get_subtotal }} €</span>
+                </div>
+                {% endfor %}
+                <hr>
+                <div class="d-flex justify-content-between fw-bold fs-5 mb-3">
+                    <span>Общо</span>
+                    <span class="text-success">{{ cart.get_total }} €</span>
+                </div>
+
+                {% if user.is_authenticated %}
+                    <a href="#" class="btn btn-success w-100">
+                        <i class="bi bi-credit-card me-1"></i> Към плащане
+                    </a>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="btn btn-success w-100">
+                        Влез, за да продължиш
+                    </a>
+                    <p class="text-muted small text-center mt-2 mb-0">
+                        или
+                        <a href="{% url 'accounts:register' %}" class="text-success">създай акаунт</a>
+                    </p>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endif %}
+
+{% endblock %}

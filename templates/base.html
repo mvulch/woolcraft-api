@@ -58,6 +58,13 @@
 </head>
 
 <body class="d-flex flex-column min-vh-100">
+{% for message in messages %}
+<div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm"
+     role="alert">
+    {{ message|safe }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
 <header class="sticky-top bg-white shadow-sm">
     <!-- first row -->
     <nav class="navbar navbar-light bg-white border-bottom">
@@ -79,12 +86,14 @@
                 </a>
                 {% endif %}
 
-                <a href="#" class="text-dark fs-4 position-relative me-2" title="Количка">
-                    <i class="bi bi-cart"></i>
-                    <span class="position-absolute top-0 translate-middle rounded-circle"
-                          style="font-size: 10px;">
-                        0<!-- cart_items_count -->
-                    </span>
+                <a href="{% url 'orders:cart_detail' %}" class="text-dark position-relative me-2" title="Количка">
+                    <i class="bi bi-cart fs-4"></i>
+                    {% if cart_item_count > 0 %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success"
+                              style="font-size: 0.6rem;">
+                            {{ cart_item_count }}
+                        </span>
+                    {% endif %}
                 </a>
 
                 <button class="navbar-toggler d-lg-none border-0 fs-5"

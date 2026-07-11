@@ -28,6 +28,8 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.PROTECT, blank=False)
     slug = models.SlugField(max_length=100, blank=False,unique=True)
 
+    def get_quantity_range(self):
+        return range(1, self.stock_quantity + 1)
     def get_main_image(self):
         return self.images.filter(is_primary=True).first() or self.images.first()
 

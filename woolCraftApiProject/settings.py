@@ -25,9 +25,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
     'products',
-    'orders',
+    # 'orders',
     'custom_requests',
     'communication',
+    'orders.apps.OrdersConfig',
 ]
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
@@ -45,6 +46,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# SESSION_COOKIE_AGE = 60
+# SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
 ROOT_URLCONF = 'woolCraftApiProject.urls'
 
 TEMPLATES = [
@@ -58,7 +62,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'products.context_processors.nav_categories',
-                'accounts.context_processors.login_credentials'
+                'accounts.context_processors.login_credentials',
+                'orders.context_processors.cart_item_count',
             ],
         },
     },

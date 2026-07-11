@@ -35,6 +35,7 @@ def login_view(request):
             user = authenticate(request, username=email, password=password)
 
             if user is not None:
+                request.session['_old_session_key'] = request.session.session_key
                 login(request, user)
                 # return redirect('accounts:profile')
                 return redirect('home')
