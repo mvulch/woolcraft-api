@@ -7,6 +7,4 @@ urlpatterns = [
     path('cart', cart_detail_view, name='cart_detail'),
     path('remove-from-cart/<int:cart_item_id>/', remove_from_cart_view, name='remove_from_cart'),
     path('update-cart/<int:cart_item_id>/', update_cart_view, name='update_cart'),
-
-
 ]

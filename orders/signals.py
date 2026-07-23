@@ -6,7 +6,7 @@ from django.utils import timezone
 
 @receiver(user_logged_in)
 def transfer_or_merge_cart(sender, request, user, **kwargs):
-    session_key= request.session.get('_old_session_key')
+    session_key = request.session.get('_old_session_key')
     print(f"debug: old sessionkey = {session_key}")
     if not session_key:
         return
@@ -25,8 +25,8 @@ def transfer_or_merge_cart(sender, request, user, **kwargs):
         anonym_cart.save()
     # user had a cart
     else:
-        time_threshold = timezone.now() - timedelta(hours=2)
-        print(f"debug: logged_cart.updated_at = {logged_cart.updated_at}")
+        time_threshold = timezone.now() - timedelta(hours=200)
+        # print(f"debug: logged_cart.updated_at = {logged_cart.updated_at}")
         print(f"debug: time threshold = {time_threshold}")
         print(f"debug: is old = = {logged_cart.updated_at < time_threshold}")
         # in case of an old cart in the profile:
@@ -46,6 +46,7 @@ def transfer_or_merge_cart(sender, request, user, **kwargs):
                     defaults={'quantity': anonym_item.quantity}
                 )
                 if not item_created:
-                    cart_item.quantity += anonym_item.quantity
+                    new_quantity = cart_item.quantity + anonym_item.quantity
+                    cart_item.quantity = min(new_quantity, anonym_item.product.stock_quantity)
                     cart_item.save()
             anonym_cart.delete()

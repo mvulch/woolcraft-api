@@ -50,3 +50,8 @@ def category_products_view(request, category_slug=None):
         'page_obj': page_obj
     }
     return render(request, 'products/category_products.html', context)
+
+def quick_view(request, product_id):
+    product = get_object_or_404(Product.objects.select_related('category').prefetch_related('images'),
+                                id=product_id, is_active=True)
+    return render(request, 'includes/quick_view.html',{'product':product})

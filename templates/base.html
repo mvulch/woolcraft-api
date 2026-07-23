@@ -14,57 +14,11 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
     {% block extra_css %}
-    <style>
-        .navigation-wrapper {
-            position: relative;
-        }
-        .position-static {
-            position: static !important;
-        }
-
-        .categories-shop-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            width: 100%;
-            z-index: 1000;
-            background-color: #ffffff;
-            margin-top: -5px;
-            padding-top: 15px;
-        }
-        .shop-trigger {
-            position: relative;
-        }
-        .shop-trigger.show .categories-shop-menu {
-            display: block !important;
-        }
-
-        @media (min-width: 992px) {
-        .custom-hover-dropdown:hover .dropdown-menu {
-            display: block !important;
-            margin-top: 0 !important;
-            }
-        }
-        .rotate-icon {
-            display: inline-block;
-            transition: transform 0.3s ease-in-out;
-        }
-        button[aria-expanded="true"] .rotate-icon {
-            transform: rotate(90deg);
-        }
-    </style>
     {% endblock %}
 </head>
 
 <body class="d-flex flex-column min-vh-100">
-{% for message in messages %}
-<div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm"
-     role="alert">
-    {{ message|safe }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-{% endfor %}
+
 <header class="sticky-top bg-white shadow-sm">
     <!-- first row -->
     <nav class="navbar navbar-light bg-white border-bottom">
@@ -168,7 +122,7 @@
         <div class="offcanvas-header border-bottom">
             <h5 class="offcanvas-title" id="offcanvasMenuLabel">WoolCraft</h5>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
-                    title="Затвори"></button>
+                    aria-label="Затвори" title="Затвори"></button>
         </div>
         <div class="offcanvas-body">
             <div class="mb-4">
@@ -245,6 +199,13 @@
 
 <main class="flex-grow-1">
     <div class="container py-4">
+        {% for message in messages %}
+        <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %} alert-dismissible  shadow-sm"
+             role="alert">
+            {{ message|safe }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
 
         {% block content %}
         {% endblock %}
@@ -321,18 +282,30 @@
 <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
         <div class="modal-content border-0 shadow-lg p-3">
-
             <div class="modal-header border-bottom-0 pb-0">
                 <h5 class="modal-title fw-bold fs-4 mx-auto ps-4" id="loginModalLabel">Вход в WoolCraft</h5>
                 <button type="button" class="btn-close ms-0" data-bs-dismiss="modal" aria-label="Затвори"></button>
             </div>
-
             <div class="modal-body">
                 <form method="post" action="{% url 'accounts:login' %}">
                     {% include 'accounts/includes/login_form.html' %}
                 </form>
             </div>
-
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold" id="quickViewTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Затвори"></button>
+            </div>
+            <div class="modal-body" id="quickViewBody">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-success" role="status"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -345,6 +318,21 @@
         dropdown.addEventListener('mouseleave',() => {
             dropdown.classList.remove('show');
         });
+    });
+</script>
+<script>
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.quick-view-btn');
+        if (!btn) return;
+        const productId = btn.dataset.productId;
+        const modal = new bootstrap.Modal(document.getElementById('quickViewModal'));
+        const modalBody = document.getElementById('quickViewBody');
+        const modalTitle = document.getElementById('quickViewTitle');
+        modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-success" role="status"></div></div>'
+        modal.show();
+        fetch(`/products/quick-view/${productId}/`)
+            .then(r => r.text())
+            .then(html => {modalTitle.textContent = btn.dataset.productName || ''; modalBody.innerHTML = html;});
     });
 </script>
 {% endblock %}

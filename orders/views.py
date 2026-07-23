@@ -28,7 +28,7 @@ def create_and_add_cart_view(request, product_id):
         messages.warning(request,f"Недостатъчна наличност от артикул {product.name} - "
                                  f"брой налични продукти в магазина: {product.stock_quantity} - брой продукти във вашата кошница: {cart_item.quantity}")
     else:
-        cart_item.quantity = requested_quantity
+        cart_item.quantity = new_quantity
         cart_item.save()
         print(f"DEBUG: updating count, cart={cart.id}")
         update_cart_count(request, cart)
