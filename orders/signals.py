@@ -25,7 +25,7 @@ def transfer_or_merge_cart(sender, request, user, **kwargs):
         anonym_cart.save()
     # user had a cart
     else:
-        time_threshold = timezone.now() - timedelta(hours=200)
+        time_threshold = timezone.now() - timedelta(hours=20)
         # print(f"debug: logged_cart.updated_at = {logged_cart.updated_at}")
         print(f"debug: time threshold = {time_threshold}")
         print(f"debug: is old = = {logged_cart.updated_at < time_threshold}")

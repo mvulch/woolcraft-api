@@ -1,9 +1,11 @@
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
-from .models import Cart, CartItem
+from .models import Cart, CartItem, Address
 from django.contrib import messages
 from .utils import update_cart_count
 from products.models import Product
+from .forms import AddressForm
 
 @require_POST
 def create_and_add_cart_view(request, product_id):
@@ -87,3 +89,55 @@ def update_cart_view(request, cart_item_id):
                 cart_item.delete()
         update_cart_count(request,cart_item.cart)
     return redirect('orders:cart_detail')
+
+@login_required
+def address_list_view(request):
+    addresses = Address.objects.filter(user=request.user)
+    return render(request, 'orders/address_list.html', {'addresses': addresses})
+
+@login_required
+def address_create_view(request):
+    if request.method == 'POST':
+        form = AddressForm(request.POST)
+        if form.is_valid():
+            address = form.save(commit=False)
+            address.user = request.user
+            if not Address.objects.filter(user=request.user).exists():
+                address.is_default = True
+            address.save()
+            messages.success(request, "Адресът беше запазен.")
+            return redirect('orders:address_list')
+    else:
+        form = AddressForm()
+    return render(request, 'orders/address_form.html',{'form': form, 'title': 'Нов адрес'})
+
+@login_required
+def address_edit_view(request, address_id):
+    address = get_object_or_404(Address, id=address_id, user=request.user)
+    if request.method == 'POST':
+        print("debug: address_edit_view - is in post")
+        form = AddressForm(request.POST, instance=address)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Адресът беше обновен успешно.")
+            return redirect('orders:address_list')
+    else:
+        form = AddressForm(instance=address)
+    return render(request, 'orders/address_form.html', {'form': form,  'title': 'Редактирай адрес'})
+
+
+@login_required
+def address_delete_view(request, address_id):
+    address = get_object_or_404(Address, id=address_id,user=request.user)
+    if request.method == 'POST':
+        address.delete()
+        messages.success(request, "Адресът беше премахнат успешно.")
+    return redirect('orders:address_list')
+
+@login_required
+def address_set_default_view(request, address_id):
+    address = get_object_or_404(Address, id=address_id,user=request.user)
+    Address.objects.filter(user=request.user).update(is_default=False)
+    address.is_default=True
+    address.save()
+    return redirect('orders:address_list')

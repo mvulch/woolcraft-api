@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-12 col-lg-6">
+        <h2 class="mb-4">{{ title }}</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-12 col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="text"
+                               name="{{ form.first_name.name }}"
+                               class="form-control"
+                               id="{{ form.first_name.id_for_label }}"
+                               value="{{ form.first_name.value|default:'' }}"
+                               placeholder="{{ form.first_name.label }}"
+                               required>
+                        <label for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="text"
+                               name="{{ form.last_name.name }}"
+                               class="form-control"
+                               id="{{ form.last_name.id_for_label }}"
+                               value="{{ form.last_name.value|default:'' }}"
+                               placeholder="{{ form.last_name.label }}"
+                               required>
+                        <label for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-floating mb-4">
+                <input type="tel"
+                       name="{{ form.phone.name }}"
+                       class="form-control"
+                       id="{{ form.phone.id_for_label }}"
+                       value="{{ form.phone.value|default:'' }}"
+                       placeholder="{{ form.phone.label }}"
+                       required>
+                <label for="{{ form.phone.id_for_label }}">{{ form.phone.label }}</label>
+                {% if form.phone.errors %}
+                <div class="text-danger">{{ form.phone.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-floating mb-4">
+                <input type="text"
+                       name="{{ form.street.name }}"
+                       class="form-control"
+                       id="{{ form.street.id_for_label }}"
+                       value="{{ form.street.value|default:'' }}"
+                       placeholder="{{ form.street.label }}"
+                       required>
+                <label for="{{ form.street.id_for_label }}">{{ form.street.label }}</label>
+                {% if form.street.errors %}
+                <div class="text-danger small">{{ form.street.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <div class="row">
+                <div class="col-12 col-md-8">
+                    <div class="form-floating mb-3">
+                        <input type="text"
+                               name="{{ form.city.name }}"
+                               class="form-control"
+                               id="{{ form.city.id_for_label }}"
+                               value="{{ form.city.value|default:'' }}"
+                               placeholder="{{ form.city.label }}"
+                               required>
+                        <label for="{{ form.city.id_for_label }}">{{ form.city.label }}</label>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="form-floating mb-3">
+                        <input type="text"
+                               name="{{ form.postal_code.name }}"
+                               class="form-control"
+                               id="{{ form.postal_code.id_for_label }}"
+                               value="{{ form.postal_code.value|default:'' }}"
+                               placeholder="{{ form.postal_code.label }}"
+                               required>
+                        <label for="{{ form.postal_code.id_for_label }}">{{ form.postal_code.label }}</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-floating mb-4">
+                <input type="text"
+                       name="{{ form.country.name }}"
+                       class="form-control"
+                       id="{{ form.country.id_for_label }}"
+                       value="{{ form.country.value|default:'' }}"
+                       placeholder="{{ form.country.label }}"
+                       required>
+                <label for="{{ form.country.id_for_label }}">{{ form.country.label }}</label>
+                {% if form.country.errors %}
+                <div class="text-danger small">{{ form.country.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-4">
+                <label for="{{ form.address_type.id_for_label }}" class="form-label ps-2 fw-medium">
+                    {{ form.address_type.label }}
+                </label>
+                {{ form.address_type }}
+                {% if form.address_type.errors %}
+                <div class="text-danger small">{{ form.address_type.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-success w-100 mt-3 mb-5">
+                {% if form.instance.pk %}Запази промените{% else %}Добави нов адрес{% endif %}
+            </button>
+
+        </form>
+    </div>
+</div>
+{% endblock %}

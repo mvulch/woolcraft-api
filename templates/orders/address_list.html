@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Моите адреси{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 fw-bold mt-5 mb-4">Моите адреси</h1>
+    <a href="{% url 'orders:address_create' %}" class="btn btn-success">
+        <i class="bi bi-plus-lg me-1"></i>Добави адрес
+    </a>
+</div>
+
+{% if addresses %}
+    {% for address in addresses %}
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        {% if address.is_default %}
+                            <span class="badge bg-success mb-2">По подразбиране</span>
+                        {% endif %}
+                        <p class="mb-1 fw-medium">{{ address.first_name }} {{ address.last_name }}</p>
+                        <p class="mb-1 text-muted small">{{ address.street }}</p>
+                        <p class="mb-1 text-muted small">{{ address.city }}, {{ address.postal_code }}</p>
+                        <p class="mb-1 text-muted small">{{ address.country }}</p>
+                        <p class="mb-0 text-muted small">{{ address.phone }}</p>
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                         <a href="{% url 'orders:address_edit' address.id %}" class="btn btn-outline-secondary btn-sm">
+                             <i class="bi bi-pencil"></i>
+                         </a>
+                        {% if not address.is_default %}
+                            <form method="post" action="{% url 'orders:address_set_default' address.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-success btn-sm" title="Направи по подразбиране">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'orders:address_delete' address.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger btn-sm"
+                                        onclick="return confirm('Промяната е окончателна. Желаете ли де изтриете адреса?')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-geo-alt text-muted" style="font-size: 3rem;"></i>
+        <p class="text-muted mt-3">Нямате запазени адреси.</p>
+        <a href="{% url 'orders:address_create' %}" class="btn btn-success">
+            Добави адрес
+        </a>
+    </div>
+{% endif %}
+
+{% endblock %}

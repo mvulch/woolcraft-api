@@ -1,14 +1,12 @@
 from django.db import models
 from django.conf import settings
-
 from products.models import Product
-
 
 # Create your models here.
 class Address(models.Model):
     class Types(models.TextChoices):
-        SHIPPING = "SHIPPING", "Shipping"
-        INVOICING = "INVOICING", "Invoicing"
+        SHIPPING = "SHIPPING", "За доставка"
+        INVOICING = "INVOICING", "За фактуриране"
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE, related_name="addresses")
     first_name = models.CharField(max_length=25,blank=False)
