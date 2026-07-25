@@ -44,13 +44,14 @@ class Cart(models.Model):
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="item")
-    product = models.ForeignKey(Product,on_delete=models.SET_NULL,null=True)
+    product = models.ForeignKey(Product,on_delete=models.SET_NULL,null=True, related_name="cart_items")
     quantity = models.PositiveIntegerField(blank=False, default=1)
     added_at = models.DateTimeField(auto_now_add=True)
 
-
     def get_subtotal(self):
-        return self.product.price * self.quantity
+        if self.product:
+            return self.product.price * self.quantity
+        return 0
     class Meta:
         unique_together = ('cart', 'product')
 
@@ -78,10 +79,13 @@ class Order(models.Model):
         return f"Order #{self.id} of {self.user.username}"
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete = models.CASCADE)
-    product = models.ForeignKey(Product, on_delete = models.SET_NULL, null=True)
+    order = models.ForeignKey(Order, on_delete = models.CASCADE, related_name="items")
+    product = models.ForeignKey(Product, on_delete = models.SET_NULL, null=True, related_name="order_items")
     quantity = models.PositiveIntegerField(blank=False)
     price_at_purchase = models.DecimalField(max_digits=15, decimal_places=2)
+
+    def get_subtotal(self):
+        return self.price_at_purchase * self.quantity
 
     def __str__(self):
         return f"{self.quantity} x {self.product} from {self.order}"

@@ -26,8 +26,9 @@
                         <p class="mb-1 text-muted small">{{ address.country }}</p>
                         <p class="mb-0 text-muted small">{{ address.phone }}</p>
                     </div>
+                    <!-- controls - edit, set default (if it is not), delete-->
                     <div class="d-flex flex-column gap-2">
-                         <a href="{% url 'orders:address_edit' address.id %}" class="btn btn-outline-secondary btn-sm">
+                         <a href="{% url 'orders:address_edit' address.id %}" class="btn btn-outline-secondary btn-sm" title="Редактирай адреса">
                              <i class="bi bi-pencil"></i>
                          </a>
                         {% if not address.is_default %}
@@ -37,14 +38,14 @@
                                     <i class="bi bi-check-lg"></i>
                                 </button>
                             </form>
-                            <form method="post" action="{% url 'orders:address_delete' address.id %}">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-outline-danger btn-sm"
-                                        onclick="return confirm('Промяната е окончателна. Желаете ли де изтриете адреса?')">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
                         {% endif %}
+                        <form method="post" action="{% url 'orders:address_delete' address.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Изтрий адреса"
+                                    onclick="return confirm('Промяната е окончателна. Желаете ли де изтриете адреса?')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -54,9 +55,7 @@
     <div class="text-center py-5">
         <i class="bi bi-geo-alt text-muted" style="font-size: 3rem;"></i>
         <p class="text-muted mt-3">Нямате запазени адреси.</p>
-        <a href="{% url 'orders:address_create' %}" class="btn btn-success">
-            Добави адрес
-        </a>
+        <a href="{% url 'orders:address_create' %}" class="btn btn-success">Добавете адрес</a>
     </div>
 {% endif %}
 

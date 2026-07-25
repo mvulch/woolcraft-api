@@ -32,10 +32,16 @@
                     </dl>
                 </div>
             </div>
-            <a href="{% url 'orders:address_list' %}" class="btn btn-outline-success">
-                <i class="bi bi-geo-alt me-1"></i>Моите адреси
-            </a>
             <div class="mt-3 d-flex gap-2">
+                <!-- addresses -->
+                <a href="{% url 'orders:address_list' %}" class="btn btn-outline-success">
+                    <i class="bi bi-geo-alt me-1"></i>Моите адреси
+                </a>
+                <!-- orders of user -->
+                <a href="{% url 'orders:order_list' %}" class="btn btn-outline-success">
+                    <i class="bi bi-bag me-1"></i>Моите поръчки
+                </a>
+                <!-- pw change and logout-->
                 <a href="{% url 'accounts:password_change' %}" class="btn btn-outline-secondary">Смяна на паролата</a>
                 <form action="{% url 'accounts:logout'%}" method="POST">
                     {% csrf_token %}
