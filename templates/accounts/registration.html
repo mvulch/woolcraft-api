@@ -5,18 +5,9 @@
 
 <div class="row justify-content-center mt-5">
         <div class="col-12 col-lg-6">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif%}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-
             <h2 class="mb-4">Регистрация</h2>
             <form method="post">
                 {% csrf_token %}
-
                 <div class="form-floating mb-3">
                     <input type="username"
                            name="{{ form.username.name }}"

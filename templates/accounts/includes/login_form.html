@@ -17,9 +17,9 @@
            placeholder="Password"
            required>
     <label for="{{ form.password.id_for_label }}">Парола</label>
-
 </div>
 <button type="submit" class="btn btn-primary w-100">Вход</button>
+<a href="{% url 'accounts:password_reset' %}" class="text-muted small">Забравена парола?</a>
 <p class="text-center mt-2 mb-0">
     Нямате профил? <a href="{% url 'accounts:register' %}">Регистрирайте се</a>
 </p>
