@@ -2,6 +2,60 @@ from django.conf import settings
 from django.db import models
 
 # Create your models here.
+class Article(models.Model):
+    title = models.CharField(max_length=150)
+    slug = models.SlugField(max_length=150, unique=True)
+    content = models.TextField()
+    is_published = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="articles")
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Статия"
+        verbose_name_plural = "Статии"
+    def __str__(self):
+        return self.title[:20]
+
+class ArticleImage(models.Model):
+    article = models.ForeignKey(Article,on_delete = models.CASCADE, related_name="images")
+    image = models.ImageField(upload_to="communication/articles/")
+    is_primary = models.BooleanField(default=False)
+    alt_text = models.CharField(max_length=120, blank=True)
+
+    def __str__(self):
+        return f"Image for {self.article.title}"
+
+class ContactMessage(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+                                related_name="message")
+    subject = models.CharField(max_length=200)
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_resolved = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Съобщение за контакт"
+        verbose_name_plural = "Събощения за контакт"
+    def __str__(self):
+        status = "(Приключено)" if self.is_resolved else "(Незавършено)"
+        return f"{status} събощение за контакт #{self.id} от {self.user.username}"
+
+class ContactMessageReply(models.Model):
+    message = models.ForeignKey(ContactMessage, on_delete=models.CASCADE, related_name="replies")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="message_replies")
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        ordering = ['created_at']
+        verbose_name = "Отговор на съобщение за контакт"
+        verbose_name_plural = "Отговори на събощение за контакт"
+    def __str__(self):
+        role = "служител" if self.user.is_staff else "клиент"
+        return f"Отоговр от {role} {self.user.username} на събощение за контакт #{self.message.id}"
+
 class ChatSession(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT,null=False, related_name="chat_sessions")
     started_at = models.DateTimeField(auto_now_add=True)

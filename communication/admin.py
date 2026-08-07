@@ -1,6 +1,24 @@
 from django.contrib import admin
-from .models import ChatSession, ChatMessage
+from .models import ChatSession, ChatMessage, ContactMessage, Article, ArticleImage
 # Register your models here.
+@admin.register(Article)
+class ArticleAdmin(admin.ModelAdmin):
+    list_display = ("title", "is_published", "created_at", "updated_at","author")
+    search_fields = ("title", "created_at","author")
+    list_filter = ("is_published",)
+    readonly_fields = ("created_at", "updated_at")
+
+@admin.register(ArticleImage)
+class ArticleImageAdmin(admin.ModelAdmin):
+    list_display = ("article", "is_primary", "alt_text")
+    list_filter = ("is_primary",)
+
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ("user", "subject")
+    search_fields = ("user__email", "subject")
+    readonly_fields = ("created_at",)
+
 @admin.register(ChatSession)
 class ChatSessionAdmin(admin.ModelAdmin):
     list_display = ("user","started_at","last_activity_at")

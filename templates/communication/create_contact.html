@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Ново съобщение{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-6">
+        <h2 class="fw-bold mb-4 mt-2 ps-4">Свържете се с нас</h2>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-2">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-floating mb-3">
+                        <input type="text"
+                               name="{{ form.subject.name }}"
+                               class="form-control"
+                               id="{{ form.subject.id_for_label }}"
+                               placeholder="{{ form.subject.label }}"
+                               value="{{ form.subject.value|default:'' }}"
+                               required>
+                        <label for="{{ form.subject.id_for_label }}">{{ form.subject.label }}</label>
+                        {% if form.subject.errors %}
+                            <div class="text-danger small mt-1">{{ form.subject.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-floating mb-3">
+                        <textarea name="{{ form.text.name }}"
+                                  class="form-control"
+                                  id="{{ form.text.id_for_label }}"
+                                  placeholder="{{ form.text.label }}"
+                                  style="height: 150px;"
+                                  required>{{ form.text.value|default:'' }}</textarea>
+                        <label for="{{ form.text.id_for_label }}">{{ form.text.label }}</label>
+                        {% if form.text.errors %}
+                            <div class="text-danger small mt-1">{{ form.text.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-send me-1"></i>Изпрати
+                        </button>
+                        <a href="{% url 'communication:contact_messages_list' %}"
+                           class="btn btn-outline-secondary" title="Към моите съобщения">
+                            Отказ
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

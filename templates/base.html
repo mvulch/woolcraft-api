@@ -55,6 +55,11 @@
                                 </a>
                             </li>
                             <li>
+                                <a class="dropdown-item py-2" href="{% url 'communication:contact_messages_list' %}">
+                                    <i class="bi bi-geo-alt me-2"></i>Моите запитвания
+                                </a>
+                            </li>
+                            <li>
                                 <a class="dropdown-item py-2" href="{% url 'accounts:password_change' %}">
                                     <i class="bi bi-key me-2"></i>Смяна на парола
                                 </a>
@@ -143,7 +148,7 @@
                     <a class="nav-link text-uppercase fs-7 fw-medium text-dark" href="#">Персонализирани заявки</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-uppercase fs-7 fw-medium text-dark" href="#">Контакт</a>
+                    <a class="nav-link text-uppercase fs-7 fw-medium text-dark" href="{% url 'communication:create_contact' %}">Контакт</a>
                 </li>
 
             </ul>
@@ -225,7 +230,7 @@
                     <a class="nav-link py-2 px-3 text-dark fw-medium bg-light rounded" href="#">Персонализирани заявки</a>
                 </li>
                 <li class="nav-item mb-1">
-                    <a class="nav-link py-2 px-3 text-dark fw-medium bg-light rounded" href="#">Контакт</a>
+                    <a class="nav-link py-2 px-3 text-dark fw-medium bg-light rounded" href="{% url 'communication:create_contact' %}">Контакт</a>
                 </li>
             </ul>
         </div>

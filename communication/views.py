@@ -1,3 +1,66 @@
-from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.http import Http404
+from django.shortcuts import render, get_object_or_404
+from django.shortcuts import redirect
+from django.contrib import messages
+from .models import ContactMessage
+from .forms import ContactMessageForm, ContactMessageReplyForm
 
 # Create your views here.
+@login_required
+def contact_messages_list_view(request):
+    contact_messages = ContactMessage.objects.filter(user=request.user)
+    return render(request, 'communication/contact_messages_list.html', {'contact_messages': contact_messages})
+
+@login_required
+def create_contact_view(request):
+    if request.method == 'POST':
+        form = ContactMessageForm(request.POST)
+        if form.is_valid():
+            contact_message = form.save(commit=False)
+            contact_message.user = request.user
+            contact_message.save()
+            messages.success(request,"Съобщението Ви е изпратено успешно.")
+            return redirect('communication:contact_detail', contact_message_id=contact_message.id)
+    else:
+        form = ContactMessageForm()
+    return render(request, 'communication/create_contact.html', {'form': form})
+
+@login_required
+def contact_detail_view(request, contact_message_id):
+    contact_message = get_object_or_404(ContactMessage.objects
+                                        .prefetch_related('replies'),
+                                        id=contact_message_id)
+    if contact_message.user != request.user and not request.user.is_staff:
+        raise Http404("Нямате достъп до това съобщение.")
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'resolve':
+            contact_message.is_resolved = True
+            contact_message.save()
+            messages.success(request,'Казусът е отбелзн като приключен.')
+            #if request.ser.is_staff:
+            #    return redirect('staff:contact_messages')
+            return redirect('communication:contact_messages_list')
+
+        if action == 'reply' and not contact_message.is_resolved:
+            form = ContactMessageReplyForm(request.POST)
+            if form.is_valid():
+                reply = form.save(commit=False)
+                reply.user = request.user
+                reply.message = contact_message
+                reply.save()
+                messages.success(request, "Съобщението Ви е добавено успешно.")
+                return redirect('communication:contact_detail', contact_message_id=contact_message_id)
+
+        if contact_message.is_resolved:
+            messages.error(request, "Този казус е отбелязан като приключен.")
+            return redirect('communication:contact_detail', contact_message_id=contact_message_id)
+
+    else:
+        form = ContactMessageReplyForm()
+    context = {
+        'contact_message': contact_message,
+        'form': form,
+    }
+    return render(request, 'communication/contact_detail.html', context)

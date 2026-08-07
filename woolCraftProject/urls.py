@@ -27,7 +27,7 @@ urlpatterns = [
     path('orders/', include('orders.urls')),
     path('products/', include('products.urls')),
     path('custom_requests/', include('custom_requests.urls')),
-    path("communication/", include('communication.urls')),
+    path('communication/', include('communication.urls')),
     path('',views.home_view, name='home'),
 ]
 
