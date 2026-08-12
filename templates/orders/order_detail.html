@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}Поръчка с номер {{ order.id }}{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
+<div class="row justify-content-center mb-5">
     <div class="col-12 col-lg-8">
         <div class="text-center mb-4">
             {% if order.status == 'PENDING' %}
@@ -46,10 +46,11 @@
             <div class="card-body p-4">
                 <h5 class="fw-bold mb-3">Адрес за доставка</h5>
                 <p class="mb-1">{{ order.address.first_name }} {{ order.address.last_name }}</p>
-                <p class="mb-1 text-muted small">{{ order.address.street }}</p>
-                <p class="mb-1 text-muted small">{{ order.address.city }}, {{ order.address.postal_code }}</p>
-                <p class="mb-1 text-muted small">{{ order.address.country }}</p>
-                <p class="mb-0 text-muted small">{{ order.address.phone }}</p>
+                <p class="mb-1 text-muted small">Улица: {{ order.address.street }}</p>
+                <p class="mb-1 text-muted small">Град: {{ order.address.city }}</p>
+                <p class="mb-1 text-muted small">Пощенски код: {{ order.address.postal_code }}</p>
+                <p class="mb-1 text-muted small">Страна: {{ order.address.country }}</p>
+                <p class="mb-0 text-muted small">Телефонен номер: {{ order.address.phone }}</p>
             </div>
         </div>
 
@@ -74,7 +75,7 @@
             </div>
         </div>
 
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 pt-2 ps-4">
             <a href="{% url 'products:all_products' %}" class="btn btn-success">
                 <i class="bi bi-arrow-left me-1"></i>Продължи пазаруването
             </a>

@@ -1,4 +1,7 @@
-"""base.html"""
+.h3-center {
+    text-align: center !important;
+}
+
 .navigation-wrapper {
     position: relative;
 }

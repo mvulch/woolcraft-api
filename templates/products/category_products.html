@@ -1,13 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
-
 {% block title %}
 {% if category %}{{ category.name }} — {% endif %}Продукти
 {% endblock %}
-
 {% block content %}
-<div class="container p-0 py-2">
-    <nav aria-label="breadcrumb" class="mb-3">
+    <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
                 <a href="{% url 'products:all_products' %}" class="text-decoration-none">Магазин</a>
@@ -26,10 +23,10 @@
     <div class="row">
         <!-- products -->
         <div class="col-12 ">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 fw-bold mb-0">
+            <div class="d-flex justify-content-between align-items-center my-2">
+                <h3 class="fw-bold mb-0">
                     {% if category %}{{ category.name }}{% else %}Всички продукти{% endif %}
-                </h1>
+                </h3>
                 <span class="text-muted small">{{ page_obj.paginator.count }} продукта</span>
             </div>
 

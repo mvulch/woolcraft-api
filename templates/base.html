@@ -44,6 +44,13 @@
                                     <i class="bi bi-person me-2"></i>Профил
                                 </a>
                             </li>
+                            {% if user.is_staff %}
+                            <li>
+                                <a class="dropdown-item py-2" href="{% url 'staff:staff_dashboard' %}">
+                                    <i class="bi bi-speedometer2 me-2"></i>Служителски панел
+                                </a>
+                            </li>
+                            {% endif %}
                             <li>
                                 <a class="dropdown-item py-2" href="{% url 'orders:order_list' %}">
                                     <i class="bi bi-bag me-2"></i>Моите поръчки
@@ -56,7 +63,7 @@
                             </li>
                             <li>
                                 <a class="dropdown-item py-2" href="{% url 'communication:contact_messages_list' %}">
-                                    <i class="bi bi-geo-alt me-2"></i>Моите запитвания
+                                    <i class="bi bi-envelope me-2"></i>Моите запитвания
                                 </a>
                             </li>
                             <li>
@@ -233,6 +240,7 @@
                     <a class="nav-link py-2 px-3 text-dark fw-medium bg-light rounded" href="{% url 'communication:create_contact' %}">Контакт</a>
                 </li>
             </ul>
+
         </div>
     </div>
 </header>

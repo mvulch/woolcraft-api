@@ -1,12 +1,9 @@
 {% extends 'base.html' %}
-
 {% block title %}Моите адреси{% endblock %}
-
 {% block content %}
-
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 fw-bold mt-5 mb-4">Моите адреси</h1>
-    <a href="{% url 'orders:address_create' %}" class="btn btn-success">
+<div class="d-flex justify-content-between align-items-center my-5">
+    <h3 class="fw-bold mb-0">Моите адреси</h3>
+    <a href="{% url 'orders:address_create' %}" class="btn btn-success btn-sm">
         <i class="bi bi-plus-lg me-1"></i>Добави адрес
     </a>
 </div>

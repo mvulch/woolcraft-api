@@ -1,10 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
-
 {% block title %}{{ product.name }}{% endblock %}
-
 {% block content %}
-<div class="container p-0 py-2">
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
@@ -24,8 +21,8 @@
         </ol>
     </nav>
 
-    <div class="row g-4">
-        <div class="col-12 col-md-6">
+    <div class="row g-4 mt-5">
+        <div class="col-12 col-lg-6">
             {% with main_image=product.get_main_image %}
             {% if main_image %}
             <div class="bg-light rounded d-flex align-items-center justify-content-center"

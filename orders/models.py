@@ -21,8 +21,8 @@ class Address(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "address"
-        verbose_name_plural = "addresses"
+        verbose_name = "Адрес"
+        verbose_name_plural = "Адреси"
 
     def __str__(self):
         return f"{self.street} {self.city} {self.country}"
@@ -60,11 +60,11 @@ class CartItem(models.Model):
 
 class Order(models.Model):
     class OrderStatus(models.TextChoices):
-        PENDING = "PENDING", "Pending"
-        PAID = "PAID", "Paid"
-        SHIPPED = "SHIPPED", "Shipped"
-        DELIVERED = "DELIVERED", "Delivered"
-        CANCELLED = "CANCELLED", "Cancelled"
+        PENDING = "PENDING", "Чакаща"
+        PAID = "PAID", "Платена"
+        SHIPPED = "SHIPPED", "Изпратена"
+        DELIVERED = "DELIVERED", "Доставена"
+        CANCELLED = "CANCELLED", "Отказана"
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT,related_name="orders")
     address = models.ForeignKey(Address, on_delete=models.PROTECT)

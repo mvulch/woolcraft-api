@@ -4,4 +4,4 @@
 {% elif order.status == 'SHIPPED' %} bg-primary
 {% elif order.status == 'DELIVERED' %} bg-success
 {% elif order.status == 'CANCELLED' %} bg-danger
-{% endif %} mb-2">{{ order.get_status_display }}</span>
+{% endif %}">{{ order.get_status_display }}</span>

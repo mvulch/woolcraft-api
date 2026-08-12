@@ -2,12 +2,16 @@
 {% load static %}
 {% block title %}Вход{% endblock %}
 {% block content %}
-<div class="row justify-content-center m-5">
-    <div class="col-12 col-lg-6">
-        <h2 class="mb-4">Вход в профила</h2>
-        <form method="post">
-            {% include 'accounts/includes/login_form.html' %}
-        </form>
+<div class="row justify-content-center my-5">
+    <div class="col-12 col-lg-5">
+        <h3 class="h3-center fw-bold mb-4">Вход</h3>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <form method="post">
+                    {% include 'accounts/includes/login_form.html' %}
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

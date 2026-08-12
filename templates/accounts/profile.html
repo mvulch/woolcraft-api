@@ -2,24 +2,20 @@
 {% load static %}
 {% block title %}Профил{% endblock %}
 {% block content %}
-    <div class="row mt-5 my-3 p-0">
-        <div class="col-lg-6">
-            <h1 class="mb-4">Профилът на {{user.username}}</h1>
+    <div class="row justify-content-center my-5">
+        <div class="col-12 col-lg-6">
+            <h3 class="fw-bold mb-4">Моят профил</h3>
             <div class="card">
                 <div class="card-body">
                     <dl class="row mb-0">
                         <dt class="col-sm-4">Имейл:</dt>
                         <dd class="col-sm-8">{{ user.email }}</dd>
-
                         <dt class="col-sm-4">Име:</dt>
                         <dd class="col-sm-8">{{ user.first_name }}</dd>
-
                         <dt class="col-sm-4">Фамилия:</dt>
                         <dd class="col-sm-8">{{ user.last_name }}</dd>
-
                         <dt class="col-sm-4">Потребителско име:</dt>
                         <dd class="col-sm-8">{{ user.username }}</dd>
-
                         <dt class="col-sm-4">Дата на регистрация:</dt>
                         <dd class="col-sm-8">{{ user.date_joined|date:"d.m.Y" }}</dd>
                     </dl>
@@ -34,6 +30,16 @@
                 <a href="{% url 'orders:order_list' %}" class="btn btn-outline-success">
                     <i class="bi bi-bag me-1"></i>Моите поръчки
                 </a>
+                <!-- contact msgs -->
+                <a href="{% url 'communication:contact_messages_list' %}" class="btn btn-outline-success">
+                    <i class="bi bi-bag me-1"></i>Моите запитвания
+                </a>
+                <!-- staff panel -->
+                {% if request.user.is_staff %}
+                <a href="{% url 'staff:staff_dashboard' %}" class="btn btn-outline-success">
+                    <i class="bi bi-speedometer2 me-1"></i>Служителски панел
+                </a>
+                {% endif %}
                 <!-- pw change and logout-->
                 <a href="{% url 'accounts:password_change' %}" class="btn btn-outline-secondary">Смяна на паролата</a>
                 <form action="{% url 'accounts:logout'%}" method="POST">
