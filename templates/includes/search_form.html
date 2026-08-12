@@ -1,8 +1,9 @@
-<form method="get" action="#" class="w-100 custom-search-form">
+<form method="get" action="{% url 'products:search' %}" class="w-100 custom-search-form">
     <div class="input-group">
         <button type="submit" class="input-group-text bg-light text-muted border-end-0">
             <i class="bi bi-search"></i>
         </button>
-        <input type="text" name="q" class="form-control bg-light border-start-0 ps-0" placeholder="Търси продукти...">
+        <input type="text" name="query" class="form-control bg-light border-start-0 ps-0"
+               placeholder="Търси продукти..." value="{{ request.GET.query|default:'' }}">
     </div>
 </form>

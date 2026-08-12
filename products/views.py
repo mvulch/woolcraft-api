@@ -55,3 +55,20 @@ def quick_view(request, product_id):
     product = get_object_or_404(Product.objects.select_related('category').prefetch_related('images'),
                                 id=product_id, is_active=True)
     return render(request, 'includes/quick_view.html',{'product':product})
+
+def search_engine_view(request):
+    query = request.GET.get('query', '').strip()
+    products = Product.objects.none()
+    if query:
+        products = Product.objects.filter(
+            is_active=True).filter(
+            Q(name__icontains=query) | Q(description__icontains=query) | Q(category__name__icontains=query)
+        ).select_related('category').prefetch_related('images').distinct()
+
+    paginator = Paginator(products, 2)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    context = {
+        'query': query,
+        'page_obj': page_obj,
+    }
+    return render(request, 'products/search_results.html', context)
