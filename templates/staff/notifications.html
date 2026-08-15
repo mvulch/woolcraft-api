@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Известия | Служителски панел | WoolCraft{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center my-5">
+    <h3 class="fw-bold mb-0">Известия</h3>
+    <a href="{% url 'staff:staff_dashboard' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Табло
+    </a>
+</div>
+
+<div class="d-flex gap-2 mb-4 flex-wrap">
+    <a href="{% url 'staff:staff_notifications' %}"
+       class="btn btn-sm {% if not current_type %}btn-success{% else %}btn-outline-secondary{% endif %}">
+        Всички
+    </a>
+    {% for value, label in type_choices %}
+    <a href="?type={{ value }}"
+       class="btn btn-sm {% if current_type == value %}btn-success{% else %}btn-outline-secondary{% endif %}">
+        {{ label }}
+    </a>
+    {% endfor %}
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+
+                    <th>Съобщение</th>
+                    <th>Дата</th>
+                    <th>Статус</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for notif_recipient in page_obj %}
+                <tr>
+                    <td>#{{ notif_recipient.notification.id }}</td>
+                    <td>{{ notif_recipient.notification.message}}</td>
+                    <td class="small">{{ notif_recipient.notification.created_at|date:"d.m.Y H:i" }}</td>
+                    <td>
+                        {% if notif_recipient.is_read %}
+                            <span class="badge bg-success">Прочетено</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Непрочетено</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'staff:staff_notification_read' notif_recipient.notification.id %}"
+                           class="btn btn-outline-success btn-sm">
+                            Преглед
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">Няма съобщения.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% include 'includes/paginator.html' with extra_params="type="|add:current_type %}
+{% endblock %}

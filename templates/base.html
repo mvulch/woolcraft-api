@@ -33,6 +33,11 @@
                         <a class="text-dark fs-5" href="#" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false" title="Профил">
                             <i class="bi bi-person"></i>
+                            {% if staff_notification_count > 0 %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                                {{ staff_notification_count }}
+                            </span>
+                            {% endif %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
                             <li class="px-3 py-2 border-bottom">
@@ -48,6 +53,11 @@
                             <li>
                                 <a class="dropdown-item py-2" href="{% url 'staff:staff_dashboard' %}">
                                     <i class="bi bi-speedometer2 me-2"></i>Служителски панел
+                                    {% if staff_notification_count > 0 %}
+                                        <span class="position-absolute start-90  badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                                            {{ staff_notification_count }}
+                                        </span>
+                                    {% endif %}
                                 </a>
                             </li>
                             {% endif %}
@@ -146,10 +156,7 @@
 
                 <!-- other links from second row -->
                 <li class="nav-item">
-                    <a class="nav-link text-uppercase fs-7 fw-medium text-dark" href="#">Статии</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-uppercase fs-7 fw-medium text-dark" href="#">Форум</a>
+                    <a class="nav-link text-uppercase fs-7 fw-medium text-dark" href="{% url 'communication:article_list' %}">Статии</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-uppercase fs-7 fw-medium text-dark" href="#">Персонализирани заявки</a>
@@ -228,10 +235,7 @@
                 </li>
                 <!-- other links offcanvas menu-->
                 <li class="nav-item mb-1">
-                    <a class="nav-link py-2 px-3 text-dark fw-medium bg-light rounded" href="#">Статии</a>
-                </li>
-                <li class="nav-item mb-1">
-                    <a class="nav-link py-2 px-3 text-dark fw-medium bg-light rounded" href="#">Форум</a>
+                    <a class="nav-link py-2 px-3 text-dark fw-medium bg-light rounded" href="{% url 'communication:article_list' %}">Статии</a>
                 </li>
                 <li class="nav-item mb-1">
                     <a class="nav-link py-2 px-3 text-dark fw-medium bg-light rounded" href="#">Персонализирани заявки</a>
@@ -310,7 +314,6 @@
                     </a>
                 </div>
             </div>
-
         </div>
 
         <div class="row mt-0 py-2 border-top text-center">

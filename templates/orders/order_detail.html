@@ -1,34 +1,49 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Поръчка с номер {{ order.id }}{% endblock %}
+{% block title %}Поръчка с номер {{ order.id }} {% if is_staff_view %}| Служителски панел{% endif %} | WoolCraft{% endblock %}
 {% block content %}
-<div class="row justify-content-center mb-5">
-    <div class="col-12 col-lg-8">
-        <div class="text-center mb-4">
-            {% if order.status == 'PENDING' %}
-                <i class="bi bi-clock text-warning" style="font-size: 4rem;"></i>
-                <h2 class="fw-bold mt-3">Поръчката е в изчакване.</h2>
-            {% elif order.status == 'PAID' %}
-                <i class="bi bi-check text-info" style="font-size: 4rem;"></i>
-                <h2 class="fw-bold mt-3">Поръчката е платена.</h2>
-            {% elif order.status == 'SHIPPED' %}
-                <i class="bi bi-truck text-primary" style="font-size: 4rem;"></i>
-                <h2 class="fw-bold mt-3">Поръчката е изпратена.</h2>
-            {% elif order.status == 'DELIVERED' %}
-                <i class="bi bi-bag-check text-success" style="font-size: 4rem;"></i>
-                <h2 class="fw-bold mt-3">Поръчката е доставена.</h2>
-            {% elif order.status == 'CANCELLED' %}
-                <i class="bi bi-x-circle text-danger" style="font-size: 4rem;"></i>
-                <h2 class="fw-bold mt-3">Поръчката е отказана.</h2>
-            {% endif %}
-        </div>
+<div class="mb-5">
+    {% if is_staff_view %}
+    <div class="d-flex justify-content-between align-items-center mt-5">
+        <h3 class="fw-bold mb-0">Поръчка #{{ order.id }}</h3>
+        <a href="{% url 'staff:staff_orders_list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Обратно към поръчки
+        </a>
+    </div>
+    {% else %}
+    <div class="text-center mb-4">
+        {% if order.status == 'PENDING' %}
+        <i class="bi bi-clock text-warning" style="font-size: 4rem;"></i>
+        <h2 class="fw-bold mt-3">Поръчката е в изчакване.</h2>
+        {% elif order.status == 'PAID' %}
+        <i class="bi bi-check text-info" style="font-size: 4rem;"></i>
+        <h2 class="fw-bold mt-3">Поръчката е платена.</h2>
+        {% elif order.status == 'SHIPPED' %}
+        <i class="bi bi-truck text-primary" style="font-size: 4rem;"></i>
+        <h2 class="fw-bold mt-3">Поръчката е изпратена.</h2>
+        {% elif order.status == 'DELIVERED' %}
+        <i class="bi bi-bag-check text-success" style="font-size: 4rem;"></i>
+        <h2 class="fw-bold mt-3">Поръчката е доставена.</h2>
+        {% elif order.status == 'CANCELLED' %}
+        <i class="bi bi-x-circle text-danger" style="font-size: 4rem;"></i>
+        <h2 class="fw-bold mt-3">Поръчката е отказана.</h2>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
 
-        <div class="card border-0 shadow-sm mb-4">
+<div class="{% if is_staff_view %}row g-4 {% else %}d-flex justify-content-center{% endif %}">
+    <div class="{% if is_staff_view %}col-12 col-lg-8{% else %}col-12 col-lg-5{% endif %}">
+        <div class="card border-1 shadow-sm mb-4">
             <div class="card-body p-4">
                 <h5 class="fw-bold mb-3">Детайли на поръчката</h5>
                 <div class="row g-2">
                     <div class="col-6 text-muted small">Номер:</div>
                     <div class="col-6 small fw-medium">#{{ order.id }}</div>
+                    {% if is_staff_view %}
+                    <div class="col-6 text-muted small">Потребител:</div>
+                    <div class="col-6 small">{{ order.user.get_full_name }} ({{ order.user.email }})</div>
+                    {% endif %}
                     <div class="col-6 text-muted small">Статус:</div>
                     <div class="col-6 small">
                         {% include 'includes/order_status_color.html' %}
@@ -41,8 +56,7 @@
             </div>
         </div>
 
-
-        <div class="card border-0 shadow-sm mb-4">
+        <div class="card border-1 shadow-sm mb-4">
             <div class="card-body p-4">
                 <h5 class="fw-bold mb-3">Адрес за доставка</h5>
                 <p class="mb-1">{{ order.address.first_name }} {{ order.address.last_name }}</p>
@@ -54,7 +68,7 @@
             </div>
         </div>
 
-        <div class="card border-0 shadow-sm mb-4">
+        <div class="card border-1 shadow-sm mb-4">
             <div class="card-body p-4">
                 <h5 class="fw-bold mb-3">Продукти</h5>
                 {% for item in order.items.all %}
@@ -74,15 +88,51 @@
                 </div>
             </div>
         </div>
-
-        <div class="d-flex gap-2 pt-2 ps-4">
-            <a href="{% url 'products:all_products' %}" class="btn btn-success">
-                <i class="bi bi-arrow-left me-1"></i>Продължи пазаруването
-            </a>
-            <a href="{% url 'orders:order_list' %}" class="btn btn-outline-success">Моите поръчки</a>
-            <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">Моят профил</a>
-        </div>
-
     </div>
+    {% if is_staff_view %}
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm sticky-top m-4 p-1" style="top: 130px; z-index: 0; background-color: #e0ebeb; border-radius: 1.5rem;">
+            <div class="card-body" style="background-color: #e0ebeb; border-radius: 1.5rem;">
+            <h5 class="fw-bold mb-3">Информация</h5>
+                <div class="row g-2">
+                    <div class="col-5 text-muted small">Потребител:</div>
+                    <div class="col-7 small">{{ order.user.get_full_name }}</div>
+                    <div class="col-5 text-muted small">Имейл:</div>
+                    <div class="col-7 small">{{ order.user.email }}</div>
+                    <div class="col-5 text-muted small">Дата:</div>
+                    <div class="col-7 small">{{ order.created_at|date:"d.m.Y H:i" }}</div>
+                </div>
+            </div>
+            <div class="card-body" style="background-color: #e0ebeb; border-radius: 1.5rem;">
+                <h5 class="fw-bold mb-3">Управление на статус</h5>
+                <div class="mb-3">
+                    {% include 'includes/order_status_color.html' %}
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <select name="status" class="form-select mb-3">
+                        {% for value, label in order.OrderStatus.choices %}
+                        <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-success w-100">
+                        Запази статуса
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+<div class="d-flex gap-2 pt-4 flex-wrap {% if not is_staff_view %}justify-content-center{% endif %}">
+    {% if not is_staff_view %}
+    <a href="{% url 'products:all_products' %}" class="btn btn-success">
+        <i class="bi bi-arrow-left me-1"></i>Продължи пазаруването
+    </a>
+    <a href="{% url 'orders:order_list' %}" class="btn btn-outline-success">Моите поръчки</a>
+    <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">Моят профил</a>
+    {% endif %}
 </div>
 {% endblock %}

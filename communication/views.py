@@ -1,16 +1,26 @@
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import render, get_object_or_404
 from django.shortcuts import redirect
 from django.contrib import messages
-from .models import ContactMessage
+from .models import ContactMessage, Article, ArticleImage
 from .forms import ContactMessageForm, ContactMessageReplyForm
+from staff.utils import notify_staff
+from staff.models import Notification
 
 # Create your views here.
 @login_required
 def contact_messages_list_view(request):
     contact_messages = ContactMessage.objects.filter(user=request.user)
-    return render(request, 'communication/contact_messages_list.html', {'contact_messages': contact_messages})
+    paginator = Paginator(contact_messages, 2)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'is_staff_view': False,
+        'page_obj': page_obj,
+    }
+    return render(request, 'communication/contact_messages.html', context)
 
 @login_required
 def create_contact_view(request):
@@ -21,6 +31,10 @@ def create_contact_view(request):
             contact_message.user = request.user
             contact_message.save()
             messages.success(request,"Съобщението Ви е изпратено успешно.")
+            notify_staff(type=Notification.Type.NEW_CONTACT,
+                         message=f'Ново запитване от {request.user.get_full_name()} на тема {contact_message.subject}.',
+                         link=f'/communication/conversation/{contact_message.id}', )
+
             return redirect('communication:contact_detail', contact_message_id=contact_message.id)
     else:
         form = ContactMessageForm()
@@ -39,8 +53,8 @@ def contact_detail_view(request, contact_message_id):
             contact_message.is_resolved = True
             contact_message.save()
             messages.success(request,'Казусът е отбелзн като приключен.')
-            #if request.ser.is_staff:
-            #    return redirect('staff:contact_messages')
+            if request.user.is_staff:
+                return redirect('staff:staff_contact_messages')
             return redirect('communication:contact_messages_list')
 
         if action == 'reply' and not contact_message.is_resolved:

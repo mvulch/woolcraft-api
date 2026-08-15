@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from .models import Cart, CartItem, Address, Order, OrderItem
@@ -7,6 +8,8 @@ from .utils import update_cart_count
 from products.models import Product
 from .forms import AddressForm
 from django.db import transaction
+from staff.utils import notify_staff
+from staff.models import Notification
 
 
 @require_POST
@@ -185,6 +188,9 @@ def check_out_view(request):
                         # return redirect('orders:cart_detail')
 
                 order = Order.objects.create(user=request.user, address=address, total_price=cart.get_total())
+                notify_staff(type=Notification.Type.NEW_ORDER,
+                             message=f'Нова поръчка #{order.id} от {request.user.get_full_name()}.',
+                             link=f'/staff/staff-order-detail/{order.id}',)
                 for item in cart.item.all():
                     product = Product.objects.get(id=item.product.id)
                     OrderItem.objects.create(order=order, product=product, quantity=item.quantity,
@@ -209,9 +215,16 @@ def check_out_view(request):
 def order_detail_view(request, order_id):
     order = get_object_or_404(Order.objects.select_related('address').prefetch_related('items__product'),
                               id=order_id, user=request.user)
-    return render(request, 'orders/order_detail.html', {'order':order})
+    return render(request, 'orders/order_detail.html', {'order':order, 'is_staff_view':False})
 
 @login_required
 def order_list_view(request):
     orders = Order.objects.filter(user=request.user).prefetch_related('items').order_by('-created_at')
-    return render(request, 'orders/order_list.html', {'orders':orders})
+    paginator = Paginator(orders, 2)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'page_obj': page_obj,
+        'is_staff_view': False,
+    }
+    return render(request, 'orders/order_list.html', context)

@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}Служителски панел | WoolCraft{% endblock %}
+{% block content %}
+<h3 class="h3-center fw-bold my-5 mb-4">Служителски панел</h3>
+<div class="row justify-content-center">
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <i class="bi bi-hourglass text-warning fs-2 mb-2"></i>
+            <h3 class="fw-bold mb-0">{{ orders }}</h3>
+            <p class="text-muted small mb-0">Чакащи поръчки</p>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <i class="bi bi-envelope text-danger fs-2 mb-2"></i>
+            <h3 class="fw-bold mb-0">{{ contact_messages }}</h3>
+            <p class="text-muted small mb-0">Неприключени дискусии</p>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <i class="bi bi-bell text-primary fs-2 mb-2"></i>
+            <h3 class="fw-bold mb-0">{{ staff_notification_count }}</h3>
+            <p class="text-muted small mb-0">Нови известия</p>
+        </div>
+    </div>
+</div>
+
+
+<div class="row justify-content-center mb-4">
+    <div class="col-12 col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Последни известия</h5>
+                    <a href="{% url 'staff:staff_notifications' %}"
+                       class="btn btn-outline-success btn-sm">Всички</a>
+                </div>
+                {% for notif_recipient in recent_notifications %}
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                    <div>
+                        <a href="{% url 'staff:staff_notification_read' notif_recipient.notification.id %}" class="text-decoration-none fw-medium">#{{ notif_recipient.notification.id }}</a>
+                        <p class="text-muted small mb-0">{{ notif_recipient.notification.message }}</p>
+                        <p class="text-muted small mb-0">{{ notif_recipient.notification.created_at|date:"d.m.Y H:i" }}</p>
+
+                    </div>
+                    <div class="text-end">
+                        <i class="bi
+                        {% if notification.type == 'NEW_ORDER' %}bi-bag text-success
+                        {% elif notification.type == 'NEW_CONTACT' %}bi-envelope text-danger
+                        {% elif notification.type == 'NEW_REVIEW' %}bi-star text-warning
+                        {% else %}bi-bell text-primary
+                        {% endif %} mt-1"></i>
+
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted text-center py-3">Няма известия.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Последни поръчки</h5>
+                    <a href="{% url 'staff:staff_orders_list' %}"
+                       class="btn btn-outline-success btn-sm">Всички</a>
+                </div>
+                {% for order in last_orders %}
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                    <div>
+
+                        <a href="{% url 'staff:staff_order_detail' order.id %}"
+                           class="text-decoration-none fw-medium">#{{ order.id }}</a>
+                        <p class="text-muted small mb-0">{{ order.user.get_full_name }}</p>
+                        <p class="text-muted small mb-0">{{ order.address.get_address_type_display }}</p>
+
+                    </div>
+                    <div class="text-end">
+                        <span class="badge
+                            {% if order.status == 'PENDING' %}bg-warning text-dark
+                            {% elif order.status == 'PAID' %}bg-info
+                            {% elif order.status == 'SHIPPED' %}bg-primary
+                            {% elif order.status == 'DELIVERED' %}bg-success
+                            {% elif order.status == 'CANCELLED' %}bg-danger
+                            {% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                        <p class="text-muted small mb-0">{{ order.total_price }} €</p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted text-center py-3">Няма поръчки.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Последни съобщения</h5>
+                    <a href="{% url 'staff:staff_contact_messages' %}"
+                       class="btn btn-outline-success btn-sm">Всички</a>
+                </div>
+                {% for msg in last_messages %}
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                    <div>
+                        <a href="{% url 'communication:contact_detail' msg.id %}"
+                           class="text-decoration-none fw-medium">#{{ msg.id }}</a>
+                        <p class="text-muted small mb-0">{{ msg.user.get_full_name }}</p>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge {% if msg.is_resolved %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                            {% if msg.is_resolved %}Приключено{% else %}Отворено{% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted text-center py-3">Няма съобщения.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

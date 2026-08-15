@@ -29,6 +29,8 @@ urlpatterns = [
     path('custom_requests/', include('custom_requests.urls')),
     path('communication/', include('communication.urls')),
     path('',views.home_view, name='home'),
+    path('staff/', include('staff.urls')),
+
 ]
 
 if settings.DEBUG:
