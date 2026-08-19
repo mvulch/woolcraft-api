@@ -6,9 +6,12 @@ from orders.models import Cart
 
 # Create your views here.
 def home_view(request):
-    latest_products = Product.objects.filter(is_active=True).order_by('created_at').prefetch_related('images')[:5]
-    return render(request, 'home.html', {'latest_products': latest_products})
-
+    latest_products = Product.objects.filter(is_active=True).order_by('created_at').prefetch_related('images')[:4]
+    recommended_articles = Article.objects.filter(is_published=True).order_by('created_at').prefetch_related('images')[:4]
+    return render(request, 'home.html', {
+        'latest_products': latest_products,
+        'recommended_articles': recommended_articles,
+    })
 def product_detail_view(request,category_slug,slug):
     product_detail = get_object_or_404(Product.objects
                                        .select_related('category','video_course')

@@ -78,3 +78,18 @@ def contact_detail_view(request, contact_message_id):
         'form': form,
     }
     return render(request, 'communication/contact_detail.html', context)
+
+def article_list_view(request):
+    articles = Article.objects.filter(is_published=True).prefetch_related('images')
+    paginator = Paginator(articles,2)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'articles': articles,
+        'page_obj':page_obj,
+    }
+    return render(request, 'communication/article_list.html', context)
+
+def article_detail_view(request, slug):
+    article = get_object_or_404(Article.objects.prefetch_related('images'), slug=slug, is_published=True)
+    return render(request, 'communication/article_detail.html', {'article':article})

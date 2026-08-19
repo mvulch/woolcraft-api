@@ -4,13 +4,15 @@ from django.db import models
 # Create your models here.
 class Article(models.Model):
     title = models.CharField(max_length=150)
-    slug = models.SlugField(max_length=150, unique=True)
+    # category
+    slug = models.SlugField(max_length=150, blank=False, unique=True)
     content = models.TextField()
     is_published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="articles")
-
+    def get_main_image(self):
+        return self.images.filter(is_primary=True).first() or self.images.first()
     class Meta:
         ordering = ['-created_at']
         verbose_name = "Статия"
@@ -23,7 +25,9 @@ class ArticleImage(models.Model):
     image = models.ImageField(upload_to="communication/articles/")
     is_primary = models.BooleanField(default=False)
     alt_text = models.CharField(max_length=120, blank=True)
-
+    class Meta:
+        verbose_name = "Изображение за статия"
+        verbose_name_plural = "Изображения за статии"
     def __str__(self):
         return f"Image for {self.article.title}"
 
@@ -61,8 +65,8 @@ class ChatSession(models.Model):
     started_at = models.DateTimeField(auto_now_add=True)
     last_activity_at = models.DateTimeField(auto_now=True)
     class Meta:
-        verbose_name = "chat session"
-        verbose_name_plural = "chat sessions"
+        verbose_name = "Чат сесия"
+        verbose_name_plural = "Чат сесии"
     def __str__(self):
         return f"Session {self.id} - {self.user.email}"
 
@@ -72,8 +76,8 @@ class ChatMessage(models.Model):
     is_from_user = models.BooleanField()
     created_at = models.DateTimeField(auto_now_add=True)
     class Meta:
-        verbose_name = "chat message"
-        verbose_name_plural = "chat messages"
+        verbose_name = "Чат съобщение"
+        verbose_name_plural = "Чат съобщение"
     def __str__(self):
         sender = "Sender" if self.is_from_user else "Chat bot"
         return f"{sender}: {self.text[:20]}"
