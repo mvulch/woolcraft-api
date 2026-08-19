@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Коментар #{{ review.id }} | Служителски панел{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center my-5">
+    <h3 class="fw-bold mb-0">Коментар #{{ review.id }}</h3>
+    <a href="{% url 'staff:staff_reviews_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Обратно
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <p class="fw-medium mb-0">{{ review.user.get_full_name }}</p>
+                        <p class="text-muted small mb-0">{{ review.user.email }}</p>
+                    </div>
+                    <div class="text-end">
+                        {% for i in "12345" %}
+                            <i class="bi bi-star{% if forloop.counter <= review.rating %}-fill text-warning{% endif %}"></i>
+                        {% endfor %}
+                        <p class="text-muted small mb-0">{{ review.created_at|date:"d.m.Y H:i" }}</p>
+                    </div>
+                </div>
+                <p class="mb-0">{{ review.comment }}</p>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3">Продукт</h5>
+                <div class="d-flex gap-3 align-items-center">
+                    {% with main_image=review.product.get_main_image %}
+                        {% if main_image %}
+                            <img src="{{ main_image.image.url }}"
+                                 alt="{{ review.product.name }}"
+                                 class="rounded"
+                                 style="width: 60px; height: 60px; object-fit: cover;">
+                        {% endif %}
+                    {% endwith %}
+                    <div>
+                        <p class="fw-medium mb-0">{{ review.product.name }}</p>
+                        <a href="{% url 'products:product_detail' review.product.category.slug review.product.slug %}"
+                           class="text-muted small text-decoration-none" target="_blank">
+                            Виж продукта <i class="bi bi-box-arrow-up-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3">Статус и действия</h5>
+                <p class="mb-3">
+                    {% if review.is_published %}
+                        <span class="badge bg-success">Одобрен</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">Чака одобрение</span>
+                    {% endif %}
+                </p>
+                <form method="post" action="{% url 'staff:staff_approve_review' review.id %}"
+                      class="d-flex flex-column gap-2">
+                    {% csrf_token %}
+                    {% if not review.is_published %}
+                        <button type="submit" name="action" value="approve"
+                                class="btn btn-success">
+                            <i class="bi bi-check-lg me-1"></i>Одобри коментара
+                        </button>
+                    {% endif %}
+                    <button type="submit" name="action" value="disapprove"
+                            class="btn btn-outline-danger"
+                            onclick="return confirm('Сигурни ли сте че искате да изтриете коментара?')">
+                        <i class="bi bi-trash me-1"></i>Изтрий коментара
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

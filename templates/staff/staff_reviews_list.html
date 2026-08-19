@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Коментари | Служителски панел{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center my-5">
+    <h3 class="fw-bold mb-0">Коментари</h3>
+    <a href="{% url 'staff:staff_dashboard' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Табло
+    </a>
+</div>
+
+<div class="d-flex gap-2 mb-4">
+    <a href="?filter=not_published" class="btn btn-sm {% if current_filter == 'not_published' %}btn-success{% else %}btn-outline-secondary{% endif %}">
+        Чакащи одобрение
+    </a>
+    <a href="?filter=published" class="btn btn-sm {% if current_filter == 'published' %}btn-success{% else %}btn-outline-secondary{% endif %}">
+        Одобрени
+    </a>
+    <a href="?filter=all" class="btn btn-sm {% if current_filter == 'all' %}btn-success{% else %}btn-outline-secondary{% endif %}">
+        Всички
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        {% for review in page_obj %}
+        <div class="p-4 border-bottom">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <a href="{% url 'staff:staff_approve_review' review.id %}"
+                           class="text-decoration-none fw-medium">#{{ review.id }}</a>
+                    <p class="fw-medium mb-0">{{ review.user.get_full_name }}</p>
+                    <a href="{% url 'products:product_detail' review.product.category.slug review.product.slug %}"
+                       class="text-muted small text-decoration-none">
+                        {{ review.product.name }}
+                    </a>
+                </div>
+                <div class="text-end">
+                    {% for i in "12345" %}
+                        <i class="bi bi-star{% if forloop.counter <= review.rating %}-fill text-warning{% endif %}"></i>
+                    {% endfor %}
+                    <p class="text-muted small mb-0">{{ review.created_at|date:"d.m.Y" }}</p>
+                </div>
+            </div>
+            <p class="mb-3 small">{{ review.comment }}</p>
+            <form method="post" action="{% url 'staff:staff_approve_review' review.id %}"
+                  class="d-flex gap-2">
+                {% csrf_token %}
+                {% if not review.is_published %}
+                    <button type="submit" name="action" value="approve"
+                            class="btn btn-success btn-sm">
+                        <i class="bi bi-check-lg me-1"></i>Одобри
+                    </button>
+                {% endif %}
+                <button type="submit" name="action" value="delete"
+                        class="btn btn-outline-danger btn-sm"
+                        onclick="return confirm('Изтрий коментара?')">
+                    <i class="bi bi-trash me-1"></i>Изтрий
+                </button>
+            </form>
+        </div>
+        {% empty %}
+        <p class="text-muted text-center py-5">Няма коментари.</p>
+        {% endfor %}
+    </div>
+</div>
+{% include 'includes/paginator.html' with extra_params="filter="|add:current_filter %}
+{% endblock %}

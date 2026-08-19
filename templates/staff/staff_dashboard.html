@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Служителски панел | WoolCraft{% endblock %}
 {% block content %}
 <h3 class="h3-center fw-bold my-5 mb-4">Служителски панел</h3>
@@ -8,6 +9,13 @@
             <i class="bi bi-hourglass text-warning fs-2 mb-2"></i>
             <h3 class="fw-bold mb-0">{{ orders }}</h3>
             <p class="text-muted small mb-0">Чакащи поръчки</p>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <i class="bi bi-star text-warning fs-2 mb-2"></i>
+            <h3 class="fw-bold mb-0">{{ pending_reviews }}</h3>
+            <p class="text-muted small mb-0">Чакащи коментари</p>
         </div>
     </div>
     <div class="col-6 col-lg-3">
@@ -46,9 +54,9 @@
                     </div>
                     <div class="text-end">
                         <i class="bi
-                        {% if notification.type == 'NEW_ORDER' %}bi-bag text-success
-                        {% elif notification.type == 'NEW_CONTACT' %}bi-envelope text-danger
-                        {% elif notification.type == 'NEW_REVIEW' %}bi-star text-warning
+                        {% if notif_recipient.notification.type == 'NEW_ORDER' %}bi-bag text-success
+                        {% elif notif_recipient.notification.type == 'NEW_CONTACT' %}bi-envelope text-danger
+                        {% elif notif_recipient.notification.type == 'NEW_REVIEW' %}bi-star text-warning
                         {% else %}bi-bell text-primary
                         {% endif %} mt-1"></i>
 
@@ -95,11 +103,36 @@
                 {% endfor %}
             </div>
         </div>
-
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0">Последни съобщения</h5>
+                    <h5 class="fw-bold mb-0">Последни коментари за продукти</h5>
+                    <a href="{% url 'staff:staff_reviews_list' %}"
+                       class="btn btn-outline-success btn-sm">Всички</a>
+                </div>
+                {% for rev in recent_reviews %}
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                    <div>
+                        <a href="{% url 'staff:staff_approve_review' rev.id %}"
+                           class="text-decoration-none fw-medium">#{{ rev.id }}</a>
+                        <p class="text-muted small mb-0">{{ rev.product.name }}</p>
+                        <p class="text-muted small mb-0">{{ rev.user.get_full_name }}</p>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge {% if rev.is_published %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                            {% if rev.is_published %}Одобрено{% else %}Чакащо одобрение{% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted text-center py-3">Няма коментари за продукти.</p>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Последни неприключени дискусии</h5>
                     <a href="{% url 'staff:staff_contact_messages' %}"
                        class="btn btn-outline-success btn-sm">Всички</a>
                 </div>

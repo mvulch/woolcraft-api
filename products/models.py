@@ -61,6 +61,22 @@ class ProductImage(models.Model):
     def __str__(self):
         return f"Image for {self.product.name}"
 
+class ProductReview(models.Model):
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_reviews')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_reviews')
+    rating = models.PositiveSmallIntegerField()
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_published = models.BooleanField(default=False)
+    class Meta:
+        unique_together = ('user','product')
+        ordering = ['-created_at']
+        verbose_name = 'Ревю на продукт'
+        verbose_name_plural = 'Ревюта на продукти'
+    def __str__(self):
+        return f'Review of {self.product.name} from {self.user.email}'
+
 class VideoCourse(models.Model):
 
     class Difficulty(models.TextChoices):

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product, ProductAttribute, ProductImage,VideoCourse
+from .models import Category, Product, ProductAttribute, ProductImage, ProductReview, VideoCourse
 # Register your models here.
 """admin.site.register(Category)
     admin.site.register(Product)
@@ -28,6 +28,13 @@ class ProductAttributeAdmin(admin.ModelAdmin):
 class ProductImageAdmin(admin.ModelAdmin):
     list_display = ("product", "is_primary", "alt_text")
     list_filter = ("is_primary",)
+
+@admin.register(ProductReview)
+class ProductReviewAdmin(admin.ModelAdmin):
+    list_display = ("product", "user", "rating", "created_at")
+    list_filter = ("is_published",)
+    search_fileds = ("product__name","user__username",)
+
 
 @admin.register(VideoCourse)
 class VideoCourseAdmin(admin.ModelAdmin):

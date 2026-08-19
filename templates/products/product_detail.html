@@ -1,116 +1,202 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}{{ product.name }}{% endblock %}
+{% block title %}{{ product.name }} | WoolCraft{% endblock %}
 {% block content %}
-    <nav aria-label="breadcrumb" class="mb-3">
-        <ol class="breadcrumb">
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'products:all_products' %}" class="text-decoration-none">Магазин</a>
+        </li>
+        {% if product.category %}
+            {% if product.category.parent %}
+                <li class="breadcrumb-item">
+                    <a href="{% url 'products:category_products' product.category.parent.slug %}"
+                       class="text-decoration-none">
+                        {{ product.category.parent.name }}
+                    </a>
+                </li>
+            {% endif %}
             <li class="breadcrumb-item">
-                <a href="{% url 'products:all_products' %}" class="text-decoration-none">Магазин</a>
+                <a href="{% url 'products:category_products' product.category.slug %}"
+                   class="text-decoration-none">
+                    {{ product.category.name }}
+                </a>
             </li>
-            {% if product.category %}
-                {% if product.category.parent %}
-                    <li class="breadcrumb-item">
-                        <a href="{% url 'products:category_products' product.category.parent.slug %}" class="text-decoration-none">{{ product.category.parent.name }}</a>
-                    </li>
-                {% endif %}
-                    <li class="breadcrumb-item">
-                        <a href="{% url 'products:category_products' product.category.slug %}" class="text-decoration-none">{{ product.category.name }}</a>
-                    </li>
-            {% endif %}
-            <li class="breadcrumb-item active">{{ product.name }}</li>
-        </ol>
-    </nav>
+        {% endif %}
+        <li class="breadcrumb-item active">{{ product.name }}</li>
+    </ol>
+</nav>
 
-    <div class="row g-4 mt-5">
-        <div class="col-12 col-lg-6">
-            {% with main_image=product.get_main_image %}
-            {% if main_image %}
-            <div class="bg-light rounded d-flex align-items-center justify-content-center"
-                 style="height:450px; width: 100%; overflow: hidden;">
-                <img src="{{ main_image.image.url }}"
-                     class="card-img-top"
-                     alt="{{ product.name }}"
-                     style="max-height: 500px; object-fit: cover;"
-                     id="main-product-img">
-            </div>
-                {% if product.images.all.count > 1 %}
-                    <div class="d-flex gap-2 mt-2 flex-wrap">
-                        {% for img in product.images.all %}
-                        <img src="{{ img.image.url }}"
-                             alt="{{ img.alt_text|default:product.name }}"
-                             class="rounded border"
-                             style="width: 70px; height: 70px; object-fit: cover; cursor: pointer;"
-                             onclick="document.getElementById('main-product-img').src='{{ img.image.url }}'">
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            {% else %}
-            <div class="bg-light rounded d-flex align-items-center justify-content-center"
-                 style="height: 500px;">
-                <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
-            </div>
-            {% endif %}
-            {% endwith %}
+<div class="row g-4 mt-5">
+    <div class="col-12 col-lg-6">
+        {% with main_image=product.get_main_image %}
+        {% if main_image %}
+        <div class="bg-light rounded d-flex align-items-center justify-content-center"
+             style="height:450px; width: 100%; overflow: hidden;">
+            <img src="{{ main_image.image.url }}"
+                 class="card-img-top"
+                 alt="{{ product.name }}"
+                 style="max-height: 500px; object-fit: cover;"
+                 id="main-product-img">
         </div>
+        {% if product.images.all.count > 1 %}
+        <div class="d-flex gap-2 mt-2 flex-wrap">
+            {% for img in product.images.all %}
+            <img src="{{ img.image.url }}"
+                 alt="{{ img.alt_text|default:product.name }}"
+                 class="rounded border"
+                 style="width: 70px; height: 70px; object-fit: cover; cursor: pointer;"
+                 onclick="document.getElementById('main-product-img').src='{{ img.image.url }}'">
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="bg-light rounded d-flex align-items-center justify-content-center"
+             style="height: 500px;">
+            <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
+        </div>
+        {% endif %}
+        {% endwith %}
+    </div>
 
-        <div class="col-12 col-md-6 ">
-            <h1 class="h1">{{ product.name }}</h1>
-            {% if product.stock_quantity > 0 %}
-                <span class="badge bg-success mb-4 mt-3">В наличност</span>
-                <span class="text-muted">Налични бройки: {{ product.stock_quantity }}.</span>
-            {% else %}
-                <span class="badge bg-secondary mb-3">Изчерпан</span>
-            {% endif %}
-            <p class="fs-4 text-primary fw-bold">{{ product.price }} €</p>
+    <div class="prod_description col-12 col-md-6 ">
+        <h1 class="h1">{{ product.name }}</h1>
+        {% if product.stock_quantity > 0 %}
+        <span class="badge bg-success mb-4 mt-3">В наличност</span>
+        <span class="text-muted">Налични бройки: {{ product.stock_quantity }}.</span>
+        {% else %}
+        <span class="badge bg-secondary mb-3">Изчерпан</span>
+        {% endif %}
+        <p class="fs-4 text-primary fw-bold">{{ product.price }} €</p>
 
-            {% if product.attributes.all %}
-                <h4 class="h4 mt-4">Характеристики:</h4>
-                {% for attr in product.attributes.all %}
-                    <p class="text-muted mb-1">{{ attr.name }}: {{ attr.value }}</p>
-                {% endfor %}
-            {% endif %}
+        {% if product.attributes.all %}
+        <h4 class="h4 mt-4">Характеристики:</h4>
+        {% for attr in product.attributes.all %}
+        <p class="text-muted mb-1">{{ attr.name }}: {{ attr.value }}</p>
+        {% endfor %}
+        {% endif %}
 
-            {% if product.video_course %}
-                <h4 class="h4 mt-4">Допълнителна информация за курса:</h4>
-                <div class="card border-0 bg-light p-3 mt-2">
-                    <div class="d-flex gap-3 align-items-center mb-2">
-                        <span class="badge bg-success">{{ product.video_course.get_difficulty_display }}</span>
-                        <span class="text-muted small">
+        {% if product.video_course %}
+        <h4 class="h4 mt-4">Допълнителна информация за курса:</h4>
+        <div class="card border-0 bg-light p-3 mt-2">
+            <div class="d-flex gap-3 align-items-center mb-2">
+                <span class="badge bg-success">{{ product.video_course.get_difficulty_display }}</span>
+                <span class="text-muted small">
                             <i class="bi bi-clock me-1"></i>{{ product.video_course.duration_minutes }} мин.
                         </span>
-                    </div>
-                    <a href="{{ product.video_course.video_url }}" target="_blank" class="btn btn-outline-success w-100">
-                        <i class="bi bi-play-circle me-1"></i>Гледай видео урока
-                    </a>
-                </div>
-            {% endif %}
-            {% if product.description %}
-                <h4 class="h4 mt-4">Описание:</h4>
-                <p class="text-muted">{{ product.description }}</p>
-            {% endif %}
+            </div>
+            <a href="{{ product.video_course.video_url }}" target="_blank" class="btn btn-outline-success w-100">
+                <i class="bi bi-play-circle me-1"></i>Гледай видео урока
+            </a>
+        </div>
+        {% endif %}
+        {% if product.description %}
+        <h4 class="h4 mt-4">Описание:</h4>
+        <p class="text-muted">{{ product.description }}</p>
+        {% endif %}
 
-            <div class="d-flex gap-2 mt-4 align-items-center">
+        <div class="d-flex gap-2 mt-4 align-items-center">
             <form action="{% url 'orders:add_to_cart' product.id %}" method="POST" class="d-flex gap-2">
                 {% csrf_token %}
                 {% if max_quantity > 0 %}
-                    <input type="number"
-                               name="quantity"
-                               value="1"
-                               min="1"
-                               max="{{ max_quantity }}"
-                               class="form-control w-auto"
-                               style="max-width: 80px;">
-                    <button type="submit" class="btn btn-primary px-4">
-                        <i class="bi bi-cart-plus me-1"></i>Добави в количката
-                    </button>
+                <input type="number" name="quantity" value="1" min="1" max="{{ max_quantity }}"
+                       class="form-control w-auto" style="max-width: 80px;">
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-cart-plus me-1"></i>Добави в количката
+                </button>
                 {% else %}
-                    <button type="button" class="btn btn-secondary px-4" disabled>
-                        <i class="bi bi-x-circle me-1"></i>Този продукт в момента не е наличен.
-                    </button>
+                <button type="button" class="btn btn-secondary px-4" disabled>
+                    <i class="bi bi-x-circle me-1"></i>Този продукт в момента не е наличен.
+                </button>
                 {% endif %}
             </form>
-            </div>
         </div>
     </div>
+</div>
+
+<div class="mt-5">
+    <h4 class="fw-bold mb-4">Коментари</h4>
+    {% if user.is_authenticated %}
+        {% if existing_review %}
+            <div class="alert alert-success">
+                <i class="bi bi-check-circle me-1"></i>Вече сте оставили коментар за този продукт.
+            </div>
+        {% elif can_review %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Оставете коментар</h5>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="review_submit" value="1">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Оценка</label>
+                            <div class="d-flex gap-3">
+                                {% for value, label in review_form.rating.field.choices %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio"
+                                           name="rating" id="rating_{{ value }}"
+                                           value="{{ value }}"
+                                           {% if review_form.rating.value == value|stringformat:"s" %}checked{% endif %}>
+                                    <label class="form-check-label" for="rating_{{ value }}">
+                                        {{ value }} <i class="bi bi-star-fill text-warning"></i>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% if review_form.rating.errors %}
+                                <div class="text-danger small">{{ review_form.rating.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Коментар</label>
+                            {{ review_form.comment }}
+                            {% if review_form.comment.errors %}
+                                <div class="text-danger small">{{ review_form.comment.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-send me-1"></i>Изпрати
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-light border mb-4">
+                <i class="bi bi-info-circle me-1"></i>
+                Само потребители закупили и получили този продукт могат да оставят коментар.
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-light border mb-4">
+            <i class="bi bi-person me-1"></i>
+            <a href="{% url 'accounts:login' %}" class="text-success">Влезте</a> за да оставите коментар.
+        </div>
+    {% endif %}
+
+    {% if reviews %}
+        {% for review in reviews %}
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <p class="fw-medium mb-0">{{ review.user.get_full_name }}</p>
+                        <p class="text-muted small mb-0">{{ review.created_at|date:"d.m.Y" }}</p>
+                    </div>
+                    <div>
+                        {% for i in "12345" %}
+                            <i class="bi bi-star{% if forloop.counter <= review.rating %}-fill text-warning{% endif %}"></i>
+                        {% endfor %}
+                    </div>
+                </div>
+                <p class="mb-0 small">{{ review.comment }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted">Все още няма коментари за този продукт.</p>
+    {% endif %}
 </div>
 {% endblock %}

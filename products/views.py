@@ -1,8 +1,13 @@
 from django.db.models import Q
-from django.shortcuts import render, get_object_or_404
-from .models import Product, Category
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Product, Category, ProductReview
 from django.core.paginator import Paginator
-from orders.models import Cart
+from orders.models import Cart, Order, OrderItem
+from .forms import ProductReviewForm
+from staff.utils import notify_staff
+from django.contrib import messages
+from staff.models import Notification
+from communication.models import Article
 
 # Create your views here.
 def home_view(request):
@@ -16,6 +21,31 @@ def product_detail_view(request,category_slug,slug):
     product_detail = get_object_or_404(Product.objects
                                        .select_related('category','video_course')
                                        .prefetch_related('attributes', 'images'), is_active=True,slug=slug, category__slug=category_slug)
+    reviews = ProductReview.objects.filter(product=product_detail, is_published=True).select_related('user')
+    can_review = False
+    existing_review = None
+    review_form = None
+    if request.user.is_authenticated:
+        can_review = OrderItem.objects.filter(
+            order__user=request.user,product=product_detail,
+            order__status=Order.OrderStatus.DELIVERED).exists()
+        existing_review = ProductReview.objects.filter(user=request.user,product=product_detail).first()
+    if can_review and not existing_review:
+        if request.method == 'POST' and 'review_submit' in request.POST:
+            review_form = ProductReviewForm(request.POST)
+            if review_form.is_valid():
+                review = review_form.save(commit=False)
+                review.user = request.user
+                review.product = product_detail
+                review.save()
+                notify_staff(type=Notification.Type.NEW_REVIEW,
+                             message=f'Нов коментар от {request.user.get_full_name()} за продукт {product_detail}.',
+                             link=f'/staff/staff-review-approve/{review.id}')
+                messages.success(request, f'Коментарът е създаден успешно и очаква одобрение от наш служител.')
+                return redirect('products:product_detail', category_slug=category_slug, slug=slug)
+        else:
+            review_form = ProductReviewForm()
+
     quantity_in_cart = 0
     if request.user.is_authenticated:
         cart = Cart.objects.filter(user=request.user).first()
@@ -29,7 +59,11 @@ def product_detail_view(request,category_slug,slug):
 
     context = {
         'product': product_detail,
-        'max_quantity': product_detail.stock_quantity - quantity_in_cart
+        'max_quantity': product_detail.stock_quantity - quantity_in_cart,
+        'reviews': reviews,
+        'review_form': review_form,
+        'can_review': can_review,
+        'existing_review': existing_review,
     }
     return render(request, 'products/product_detail.html', context)
 
