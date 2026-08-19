@@ -10,8 +10,8 @@ class Category(models.Model):
     parent = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True,related_name="subcategories")
 
     class Meta:
-        verbose_name = 'category'
-        verbose_name_plural = 'categories'
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
 
     def __str__(self):
         return self.name
@@ -35,6 +35,9 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+    class Meta:
+        verbose_name = 'Продукт'
+        verbose_name_plural = 'Продукти'
 
 class ProductAttribute(models.Model):
     product = models.ForeignKey(Product,on_delete = models.CASCADE,related_name="attributes")
@@ -43,13 +46,18 @@ class ProductAttribute(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.name}: {self.value}"
+    class Meta:
+        verbose_name = 'Атрибут на продукт'
+        verbose_name_plural = 'Атрибути на продукти'
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product,on_delete = models.CASCADE, related_name="images")
     image = models.ImageField(upload_to="products/")
     is_primary = models.BooleanField(default=False)
     alt_text = models.CharField(max_length=120, blank=True)
-
+    class Meta:
+        verbose_name = 'Изображение за продукт'
+        verbose_name_plural = 'Изображения за продукти'
     def __str__(self):
         return f"Image for {self.product.name}"
 
@@ -67,3 +75,6 @@ class VideoCourse(models.Model):
 
     def __str__(self):
         return self.product.name
+    class Meta:
+        verbose_name = 'Видео курс'
+        verbose_name_plural = 'Видео курсове'

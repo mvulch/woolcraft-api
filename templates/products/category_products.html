@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}
-{% if category %}{{ category.name }} — {% endif %}Продукти
+    {% if category %}{{ category.name }} — {% endif %}Продукти | WoolCraft
 {% endblock %}
 {% block content %}
 <nav aria-label="breadcrumb">
@@ -10,13 +10,15 @@
             <a href="{% url 'products:all_products' %}" class="text-decoration-none">Магазин</a>
         </li>
         {% if category %}
-        {% if category.parent %}
-        <li class="breadcrumb-item">
-            <a href="{% url 'products:category_products' category.parent.slug %}" class="text-decoration-none">{{
-                category.parent.name }}</a>
-        </li>
-        {% endif %}
-        <li class="breadcrumb-item active">{{ category.name }}</li>
+            {% if category.parent %}
+            <li class="breadcrumb-item">
+                <a href="{% url 'products:category_products' category.parent.slug %}"
+                   class="text-decoration-none">
+                    {{ category.parent.name }}
+                </a>
+            </li>
+            {% endif %}
+                <li class="breadcrumb-item active">{{ category.name }}</li>
         {% endif %}
     </ol>
 </nav>

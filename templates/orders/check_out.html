@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Поръчка{% endblock %}
+{% block title %}Поръчка | WoolCraft{% endblock %}
 {% block content %}
 <h3 class="fw-bold mt-5 mb-4">Моята поръчка</h3>
 <form method="post">
@@ -71,7 +71,7 @@
         </div>
 
         <div class="col-12 col-lg-4">
-            <div class="card border-0 shadow-sm sticky-top p-5" style="top: 80px; z-index: 0;">
+            <div class="card border-0 shadow-sm sticky-top m-4 p-1" style="top: 130px; z-index: 0; background-color: #e0ebeb; border-radius: 1.5rem;">
                 <div class="card-body" style="background-color: #e0ebeb; border-radius: 1.5rem;">
                     <h5 class="fw-bold mb-3">Обобщение</h5>
                     {% for item in items %}

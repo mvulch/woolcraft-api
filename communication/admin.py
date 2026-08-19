@@ -7,6 +7,7 @@ class ArticleAdmin(admin.ModelAdmin):
     search_fields = ("title", "created_at","author")
     list_filter = ("is_published",)
     readonly_fields = ("created_at", "updated_at")
+    prepopulated_fields = {"slug": ("title",)}
 
 @admin.register(ArticleImage)
 class ArticleImageAdmin(admin.ModelAdmin):

@@ -37,6 +37,9 @@ class Cart(models.Model):
 
     def get_total(self):
         return sum(item.get_subtotal() for item in self.item.all())
+    class Meta:
+        verbose_name = "Количка"
+        verbose_name_plural = "Колички"
     def __str__(self):
         if self.user:
             return f"Cart of {self.user.username}"
@@ -54,6 +57,8 @@ class CartItem(models.Model):
         return 0
     class Meta:
         unique_together = ('cart', 'product')
+        verbose_name = "Артикул в количка"
+        verbose_name_plural = "Артикули в колички"
 
     def __str__(self):
         return f"{self.quantity} x {self.product} from {self.cart}"
@@ -74,7 +79,9 @@ class Order(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     #stripe_payment_id
     #stripe_customer_id
-
+    class Meta:
+        verbose_name = "Поръчка"
+        verbose_name_plural = "Поръчки"
     def __str__(self):
         return f"Order #{self.id} of {self.user.username}"
 
@@ -86,7 +93,9 @@ class OrderItem(models.Model):
 
     def get_subtotal(self):
         return self.price_at_purchase * self.quantity
-
+    class Meta:
+        verbose_name = "Артикул в поръчка"
+        verbose_name_plural = "Артикули в поръчки"
     def __str__(self):
         return f"{self.quantity} x {self.product} from {self.order}"
 
@@ -99,8 +108,7 @@ class OrderStatusHistory(models.Model):
     note = models.CharField(max_length = 200, blank=True)
 
     class Meta:
-        verbose_name = "orderStatusHistory"
-        verbose_name_plural = "orderStatusHistory"
-
+        verbose_name = "История на статус на поръчка"
+        verbose_name_plural = "История на статус на поръчки"
     def __str__(self):
         return f"{self.order}: {self.old_status} -> {self.new_status}"
