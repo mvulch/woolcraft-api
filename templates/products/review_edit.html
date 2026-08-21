@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Редактирай отзив | WoolCraft{% endblock %}
+{% block content %}
+<div class="row justify-content-center my-3">
+    <div class="col-12 col-lg-6">
+        {% include 'includes/review_form.html' with form=form form_title="Редактирай отзив" review_submit_hidden=False submit_icon="bi-check-lg" submit_label="Запази" cancel_url=review.product.get_url%}
+        <p class="text-muted small mt-3">
+            <i class="bi bi-info-circle me-1"></i>След редактиране отзивът ще бъде изпратен за ново одобрение.
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -1,5 +1,4 @@
 <div class="card h-100 shadow-sm border-0">
-
     <div class="p-3 pb-0">
         <a href="{% url 'products:product_detail' product.category.slug product.slug %}" class="text-decoration-none d-block">
             {% with main_image=product.get_main_image %}
@@ -24,6 +23,14 @@
 
         <div class="mt-auto d-flex justify-content-between align-items-center pt-2">
             <span class="fw-bold text-success fs-5">{{ product.price }} €</span>
+            {% with avg=product.get_average_rating count=product.get_review_count %}
+            {% if avg %}
+                <span class="text-muted small">{{ avg }}
+                    <i class="bi bi-star-fill text-warning"></i>
+                    <span class="text-muted ms-1">({{ count }})</span>
+                </span>
+            {% endif %}
+            {% endwith %}
             <div class="d-flex align-items-center gap-2">
                 <button type="button" class="btn btn-outline-success btn-sm rounded-circle px-2 py-1 quick-view-btn" title="Предварителен преглед"
                         data-product-id="{{ product.id }}" data-product-name="{{ product.name }}">

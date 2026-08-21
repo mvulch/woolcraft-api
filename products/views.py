@@ -8,10 +8,11 @@ from staff.utils import notify_staff
 from django.contrib import messages
 from staff.models import Notification
 from communication.models import Article
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 def home_view(request):
-    latest_products = Product.objects.filter(is_active=True).order_by('created_at').prefetch_related('images')[:4]
+    latest_products = Product.objects.filter(is_active=True).order_by('created_at').prefetch_related('images')[:8]
     recommended_articles = Article.objects.filter(is_published=True).order_by('created_at').prefetch_related('images')[:4]
     return render(request, 'home.html', {
         'latest_products': latest_products,
@@ -41,7 +42,7 @@ def product_detail_view(request,category_slug,slug):
                 notify_staff(type=Notification.Type.NEW_REVIEW,
                              message=f'Нов коментар от {request.user.get_full_name()} за продукт {product_detail}.',
                              link=f'/staff/staff-review-approve/{review.id}')
-                messages.success(request, f'Коментарът е създаден успешно и очаква одобрение от наш служител.')
+                messages.success(request, f'Коментарът е създаден успешно и очаква одобрение от нашия екип.')
                 return redirect('products:product_detail', category_slug=category_slug, slug=slug)
         else:
             review_form = ProductReviewForm()
@@ -89,7 +90,7 @@ def category_products_view(request, category_slug=None):
     return render(request, 'products/category_products.html', context)
 
 def quick_view(request, product_id):
-    product = get_object_or_404(Product.objects.select_related('category').prefetch_related('images'),
+    product = get_object_or_404(Product.objects.select_related('category').prefetch_related('images','reviews'),
                                 id=product_id, is_active=True)
     return render(request, 'includes/quick_view.html',{'product':product})
 
@@ -109,3 +110,21 @@ def search_engine_view(request):
         'page_obj': page_obj,
     }
     return render(request, 'products/search_results.html', context)
+
+@login_required
+def review_edit_view(request, review_id):
+    review = get_object_or_404(ProductReview, id=review_id, user=request.user)
+    if request.method == 'POST':
+        form = ProductReviewForm(request.POST, instance=review)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.is_published = False
+            review.save()
+            notify_staff(type=Notification.Type.NEW_REVIEW,
+                         message=f'Редактиран коментар от {request.user.get_full_name()} за продукт {review.product}.',
+                         link=f'/staff/staff-review-approve/{review.id}')
+            messages.success(request, 'Отзивът е обновен и изчаква одобрение от нашия екип.')
+            return redirect('products:product_detail', category_slug=review.product.category.slug, slug=review.product.slug)
+    else:
+        form = ProductReviewForm(instance=review)
+    return render(request,'products/review_edit.html',{'review':review,'form':form})

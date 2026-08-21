@@ -1,5 +1,7 @@
 from django.db import models
 from django.conf import settings
+from django.db.models import Avg
+
 
 # Create your models here.
 class Category(models.Model):
@@ -30,8 +32,21 @@ class Product(models.Model):
 
     def get_quantity_range(self):
         return range(1, self.stock_quantity + 1)
+
     def get_main_image(self):
         return self.images.filter(is_primary=True).first() or self.images.first()
+
+    def get_average_rating(self):
+        result = self.reviews.filter(is_published=True).aggregate(avg=Avg('rating'))
+        avg = result['avg']
+        return round(avg, 2) if avg else None
+
+    def get_review_count(self):
+        return self.reviews.filter(is_published=True).count()
+
+    def get_url(self):
+        from django.urls import reverse
+        return reverse('products:product_detail', kwargs={'category_slug': self.category.slug, 'slug': self.slug})
 
     def __str__(self):
         return self.name
@@ -62,9 +77,8 @@ class ProductImage(models.Model):
         return f"Image for {self.product.name}"
 
 class ProductReview(models.Model):
-
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_reviews')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_reviews')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reviews')
     rating = models.PositiveSmallIntegerField()
     comment = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

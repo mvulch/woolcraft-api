@@ -60,10 +60,31 @@
     </div>
 
     <div class="prod_description col-12 col-md-6 ">
-        <h1 class="h1">{{ product.name }}</h1>
+        <h1 class="h1 mb-2">{{ product.name }}</h1>
+        {% with avg=product.get_average_rating count=product.get_review_count %}
+        {% if avg %}
+            <div class="d-flex align-items-center gap-3 mb-1">
+                <div>
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= avg %}
+                            <i class="bi bi-star-fill text-warning"></i>
+                        {% elif forloop.counter <= avg|add:"0.5" %}
+                            <i class="bi bi-star-half text-warning"></i>
+                        {% else %}
+                            <i class="bi bi-star text-warning"></i>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <span class="fw-bold">{{ avg }} / 5,0</span>
+                <span class="text-muted ">{{ count }} отзива</span>
+            </div>
+        {% endif %}
+        {% endwith %}
+
+
         {% if product.stock_quantity > 0 %}
         <span class="badge bg-success mb-4 mt-3">В наличност</span>
-        <span class="text-muted">Налични бройки: {{ product.stock_quantity }}.</span>
+        <span class="text-muted small ms-3">Налични бройки: {{ product.stock_quantity }}.</span>
         {% else %}
         <span class="badge bg-secondary mb-3">Изчерпан</span>
         {% endif %}
@@ -118,51 +139,14 @@
     <h4 class="fw-bold mb-4">Коментари</h4>
     {% if user.is_authenticated %}
         {% if existing_review %}
-            <div class="alert alert-success">
-                <i class="bi bi-check-circle me-1"></i>Вече сте оставили коментар за този продукт.
+            <div class="alert alert-success d-flex justify-content-between align-items-center">
+                <i class="bi bi-check-circle me-1"></i>Вече сте оставили отзив за този продукт.
+                <a href="{% url 'products:review_edit' existing_review.id %}" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-pencil me-1"></i>Редактирай
+                </a>
             </div>
         {% elif can_review %}
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3">Оставете коментар</h5>
-                    <form method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="review_submit" value="1">
-
-                        <div class="mb-3">
-                            <label class="form-label fw-medium">Оценка</label>
-                            <div class="d-flex gap-3">
-                                {% for value, label in review_form.rating.field.choices %}
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio"
-                                           name="rating" id="rating_{{ value }}"
-                                           value="{{ value }}"
-                                           {% if review_form.rating.value == value|stringformat:"s" %}checked{% endif %}>
-                                    <label class="form-check-label" for="rating_{{ value }}">
-                                        {{ value }} <i class="bi bi-star-fill text-warning"></i>
-                                    </label>
-                                </div>
-                                {% endfor %}
-                            </div>
-                            {% if review_form.rating.errors %}
-                                <div class="text-danger small">{{ review_form.rating.errors|striptags }}</div>
-                            {% endif %}
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-medium">Коментар</label>
-                            {{ review_form.comment }}
-                            {% if review_form.comment.errors %}
-                                <div class="text-danger small">{{ review_form.comment.errors|striptags }}</div>
-                            {% endif %}
-                        </div>
-
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-send me-1"></i>Изпрати
-                        </button>
-                    </form>
-                </div>
-            </div>
+            {% include 'includes/review_form.html' with form=review_form form_title="Оставете коментар" review_submit_hidden=True submit_icon="bi-send" submit_label="Изпрати" %}
         {% else %}
             <div class="alert alert-light border mb-4">
                 <i class="bi bi-info-circle me-1"></i>
