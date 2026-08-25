@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ChatSession, ChatMessage, ContactMessage, Article, ArticleImage
+from .models import ChatSession, ChatMessage, ContactMessage, Article, ArticleImage, ContactMessageReply
 # Register your models here.
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
@@ -18,6 +18,12 @@ class ArticleImageAdmin(admin.ModelAdmin):
 class ContactMessageAdmin(admin.ModelAdmin):
     list_display = ("user", "subject")
     search_fields = ("user__email", "subject")
+    readonly_fields = ("created_at",)
+
+@admin.register(ContactMessageReply)
+class ContactMessageReplyAdmin(admin.ModelAdmin):
+    list_display = ("message", "user")
+    search_fields = ("user__email", "text", "message")
     readonly_fields = ("created_at",)
 
 @admin.register(ChatSession)

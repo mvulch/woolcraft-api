@@ -20,10 +20,7 @@
                 {{ product.name }}
             </a>
         </h6>
-
-        <div class="mt-auto d-flex justify-content-between align-items-center pt-2">
-            <span class="fw-bold text-success fs-5">{{ product.price }} €</span>
-            {% with avg=product.get_average_rating count=product.get_review_count %}
+        {% with avg=product.get_average_rating count=product.get_review_count %}
             {% if avg %}
                 <span class="text-muted small">{{ avg }}
                     <i class="bi bi-star-fill text-warning"></i>
@@ -31,6 +28,10 @@
                 </span>
             {% endif %}
             {% endwith %}
+
+        <div class="mt-auto d-flex justify-content-between align-items-center pt-2">
+            <span class="fw-bold text-success fs-5">{{ product.price }} €</span>
+
             <div class="d-flex align-items-center gap-2">
                 <button type="button" class="btn btn-outline-success btn-sm rounded-circle px-2 py-1 quick-view-btn" title="Предварителен преглед"
                         data-product-id="{{ product.id }}" data-product-name="{{ product.name }}">

@@ -51,10 +51,13 @@
                             </li>
                             {% if user.is_staff %}
                             <li>
-                                <a class="dropdown-item py-2" href="{% url 'staff:staff_dashboard' %}">
-                                    <i class="bi bi-speedometer2 me-2"></i>Служителски панел
+                                <a class="dropdown-item py-2 d-flex justify-content-between align-items-center"
+                                   href="{% url 'staff:staff_dashboard' %}">
+                                    <span>
+                                        <i class="bi bi-speedometer2 me-2"></i>Административен панел
+                                    </span>
                                     {% if staff_notification_count > 0 %}
-                                        <span class="position-absolute start-90  badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                                        <span class="badge rounded-pill bg-danger ms-2">
                                             {{ staff_notification_count }}
                                         </span>
                                     {% endif %}
@@ -64,6 +67,11 @@
                             <li>
                                 <a class="dropdown-item py-2" href="{% url 'orders:order_list' %}">
                                     <i class="bi bi-bag me-2"></i>Моите поръчки
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2" href="{% url 'custom_requests:custom_requests_list' %}">
+                                    <i class="bi bi-bag me-2"></i>Моите заявки
                                 </a>
                             </li>
                             <li>
@@ -159,7 +167,7 @@
                     <a class="nav-link text-uppercase fs-7 fw-medium text-dark" href="{% url 'communication:article_list' %}">Статии</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-uppercase fs-7 fw-medium text-dark" href="#">Персонализирани заявки</a>
+                    <a class="nav-link text-uppercase fs-7 fw-medium text-dark" href="{% url 'custom_requests:custom_request_create' %}">Персонализирани заявки</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-uppercase fs-7 fw-medium text-dark" href="{% url 'communication:create_contact' %}">Контакт</a>
@@ -238,7 +246,7 @@
                     <a class="nav-link py-2 px-3 text-dark fw-medium bg-light rounded" href="{% url 'communication:article_list' %}">Статии</a>
                 </li>
                 <li class="nav-item mb-1">
-                    <a class="nav-link py-2 px-3 text-dark fw-medium bg-light rounded" href="#">Персонализирани заявки</a>
+                    <a class="nav-link py-2 px-3 text-dark fw-medium bg-light rounded" href="{% url 'custom_requests:custom_request_create' %}">Персонализирани заявки</a>
                 </li>
                 <li class="nav-item mb-1">
                     <a class="nav-link py-2 px-3 text-dark fw-medium bg-light rounded" href="{% url 'communication:create_contact' %}">Контакт</a>

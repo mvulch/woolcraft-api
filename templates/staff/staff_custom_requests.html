@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Персонализирани заявки | Служителски панел{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold mb-0">Персонализирани заявки</h3>
+    <a href="{% url 'staff:staff_dashboard' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Табло
+    </a>
+</div>
+
+<div class="d-flex gap-2 mb-4 flex-wrap">
+    <a href="{% url 'staff:staff_custom_requests_list' %}"
+       class="btn btn-sm {% if not current_status %}btn-success{% else %}btn-outline-secondary{% endif %}">
+        Всички
+    </a>
+    {% for value, label in status_choices %}
+    <a href="?status={{ value }}"
+       class="btn btn-sm {% if current_status == value %}btn-success{% else %}btn-outline-secondary{% endif %}">
+        {{ label }}
+    </a>
+    {% endfor %}
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Потребител</th>
+                    <th>Заглавие</th>
+                    <th>Дата</th>
+                    <th>Статус</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in page_obj %}
+                <tr>
+                    <td class="text-muted small">#{{ req.id }}</td>
+                    <td>
+                        <p class="mb-0">{{ req.user.get_full_name }}</p>
+                        <p class="text-muted small mb-0">{{ req.user.email }}</p>
+                    </td>
+                    <td class="fw-medium">{{ req.title }}</td>
+                    <td class="text-muted small">{{ req.created_at|date:"d.m.Y" }}</td>
+                    <td>
+                        <span class="badge
+                            {% if req.status == 'PENDING' %}bg-warning text-dark
+                            {% elif req.status == 'REVIEWED' %}bg-info
+                            {% elif req.status == 'ACCEPTED' %}bg-success
+                            {% elif req.status == 'REJECTED' %}bg-danger
+                            {% endif %}">
+                            {{ req.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'custom_requests:custom_request_detail' req.id %}"
+                           class="btn btn-outline-success btn-sm">
+                            Преглед
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">Няма заявки.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'includes/paginator.html' with extra_params="status="|add:current_status %}
+{% endblock %}

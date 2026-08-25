@@ -4,6 +4,14 @@
 {% block content %}
 <h3 class="h3-center fw-bold my-5 mb-4">Административен панел</h3>
 <div class="row justify-content-center">
+
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <i class="bi bi-bell text-primary fs-2 mb-2"></i>
+            <h3 class="fw-bold mb-0">{{ staff_notification_count }}</h3>
+            <p class="text-muted small mb-0">Нови известия</p>
+        </div>
+    </div>
     <div class="col-6 col-lg-3">
         <div class="card border-0 shadow-sm text-center p-3">
             <i class="bi bi-hourglass text-warning fs-2 mb-2"></i>
@@ -13,9 +21,9 @@
     </div>
     <div class="col-6 col-lg-3">
         <div class="card border-0 shadow-sm text-center p-3">
-            <i class="bi bi-star text-warning fs-2 mb-2"></i>
-            <h3 class="fw-bold mb-0">{{ pending_reviews }}</h3>
-            <p class="text-muted small mb-0">Чакащи коментари</p>
+            <i class="bi bi-envelope text-danger fs-2 mb-2"></i>
+            <h3 class="fw-bold mb-0">{{ custom_requests }}</h3>
+            <p class="text-muted small mb-0">Незавършени персонализирани заявки</p>
         </div>
     </div>
     <div class="col-6 col-lg-3">
@@ -27,9 +35,9 @@
     </div>
     <div class="col-6 col-lg-3">
         <div class="card border-0 shadow-sm text-center p-3">
-            <i class="bi bi-bell text-primary fs-2 mb-2"></i>
-            <h3 class="fw-bold mb-0">{{ staff_notification_count }}</h3>
-            <p class="text-muted small mb-0">Нови известия</p>
+            <i class="bi bi-star text-warning fs-2 mb-2"></i>
+            <h3 class="fw-bold mb-0">{{ pending_reviews }}</h3>
+            <p class="text-muted small mb-0">Чакащи коментари</p>
         </div>
     </div>
 </div>
@@ -50,7 +58,6 @@
                         <a href="{% url 'staff:staff_notification_read' notif_recipient.notification.id %}" class="text-decoration-none fw-medium">#{{ notif_recipient.notification.id }}</a>
                         <p class="text-muted small mb-0">{{ notif_recipient.notification.message }}</p>
                         <p class="text-muted small mb-0">{{ notif_recipient.notification.created_at|date:"d.m.Y H:i" }}</p>
-
                     </div>
                     <div class="text-end">
                         <i class="bi
@@ -106,26 +113,32 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0">Последни коментари за продукти</h5>
-                    <a href="{% url 'staff:staff_reviews_list' %}"
+                    <h5 class="fw-bold mb-0">Последни персонализирани заявки</h5>
+                    <a href="{% url 'staff:staff_custom_requests_list' %}"
                        class="btn btn-outline-success btn-sm">Всички</a>
                 </div>
-                {% for rev in recent_reviews %}
+                {% for cr in recent_custom_requests %}
                 <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
                     <div>
-                        <a href="{% url 'staff:staff_approve_review' rev.id %}"
-                           class="text-decoration-none fw-medium">#{{ rev.id }}</a>
-                        <p class="text-muted small mb-0">{{ rev.product.name }}</p>
-                        <p class="text-muted small mb-0">{{ rev.user.get_full_name }}</p>
+                        <a href="{% url 'custom_requests:custom_request_detail' cr.id %}"
+                           class="text-decoration-none fw-medium">#{{ cr.id }}</a>
+                        <p class="text-muted small mb-0">{{ cr.title }}</p>
+                        <p class="text-muted small mb-0">{{ cr.user.get_full_name }}</p>
                     </div>
                     <div class="text-end">
-                        <span class="badge {% if rev.is_published %}bg-success{% else %}bg-warning text-dark{% endif %}">
-                            {% if rev.is_published %}Одобрено{% else %}Чакащо одобрение{% endif %}
+                        <span class="badge
+                            {% if cr.status == 'PENDING' %}bg-warning text-dark
+                            {% elif cr.status == 'REVIEWED' %}bg-info
+                            {% elif cr.status == 'ACCEPTED' %}bg-success
+                            {% elif cr.status == 'REJECTED' %}bg-danger
+                            {% endif %}">
+                            {{ cr.get_status_display }}
                         </span>
+                        <p class="text-muted small mb-0">{{ cr.created_at|date:"d.m.Y H:i"  }}</p>
                     </div>
                 </div>
                 {% empty %}
-                <p class="text-muted text-center py-3">Няма коментари за продукти.</p>
+                <p class="text-muted text-center py-3">Няма персонализирани заявки.</p>
                 {% endfor %}
             </div>
         </div>
@@ -154,6 +167,33 @@
                 {% endfor %}
             </div>
         </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Последни коментари за продукти</h5>
+                    <a href="{% url 'staff:staff_reviews_list' %}"
+                       class="btn btn-outline-success btn-sm">Всички</a>
+                </div>
+                {% for rev in recent_reviews %}
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                    <div>
+                        <a href="{% url 'staff:staff_approve_review' rev.id %}"
+                           class="text-decoration-none fw-medium">#{{ rev.id }}</a>
+                        <p class="text-muted small mb-0">{{ rev.product.name }}</p>
+                        <p class="text-muted small mb-0">{{ rev.user.get_full_name }}</p>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge {% if rev.is_published %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                            {% if rev.is_published %}Одобрено{% else %}Чакащо одобрение{% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted text-center py-3">Няма коментари за продукти.</p>
+                {% endfor %}
+            </div>
+        </div>
+
     </div>
 </div>
 {% endblock %}

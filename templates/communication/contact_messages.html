@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
 {% load static %}
-
 {% block title %}
 {% if is_staff_view %}Съобщения | Служителски панел{% else %}Моите съобщения{% endif %} | WoolCraft
 {% endblock %}
@@ -37,7 +36,7 @@
     </a>
 </div>
 {% endif %}
-
+<!-- table for all -->
 <div class="card border-0 shadow-sm">
     <div class="table-responsive">
         <table class="table table-hover mb-0">

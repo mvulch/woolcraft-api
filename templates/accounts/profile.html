@@ -30,6 +30,10 @@
                 <a href="{% url 'orders:order_list' %}" class="btn btn-outline-success">
                     <i class="bi bi-bag me-1"></i>Моите поръчки
                 </a>
+                <!-- custom requests -->
+                <a href="{% url 'custom_requests:custom_requests_list' %}" class="btn btn-outline-success">
+                    <i class="bi bi-bag me-1"></i>Моите поръчки
+                </a>
                 <!-- contact msgs -->
                 <a href="{% url 'communication:contact_messages_list' %}" class="btn btn-outline-success">
                     <i class="bi bi-bag me-1"></i>Моите запитвания
@@ -37,7 +41,7 @@
                 <!-- staff panel -->
                 {% if request.user.is_staff %}
                 <a href="{% url 'staff:staff_dashboard' %}" class="btn btn-outline-success">
-                    <i class="bi bi-speedometer2 me-1"></i>Служителски панел
+                    <i class="bi bi-speedometer2 me-1"></i>Административен панел
                 </a>
                 {% endif %}
                 <!-- pw change and logout-->

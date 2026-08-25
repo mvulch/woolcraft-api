@@ -57,8 +57,8 @@ class ContactMessageReply(models.Model):
         verbose_name = "Отговор на съобщение за контакт"
         verbose_name_plural = "Отговори на събощение за контакт"
     def __str__(self):
-        role = "служител" if self.user.is_staff else "клиент"
-        return f"Отоговр от {role} {self.user.username} на събощение за контакт #{self.message.id}"
+        role = "член на екипа" if self.user.is_staff else "клиент"
+        return f"Отоговр от {role} {self.user.get_full_name()} на събощение за контакт #{self.message.id}"
 
 class ChatSession(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT,null=False, related_name="chat_sessions")

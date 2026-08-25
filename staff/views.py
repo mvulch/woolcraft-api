@@ -5,6 +5,7 @@ from django.contrib import messages
 from communication.models import ContactMessage
 from orders.models import Order
 from products.models import ProductReview
+from custom_requests.models import CustomRequest
 from .models import Notification, NotificationRecipient
 
 
@@ -13,12 +14,13 @@ from .models import Notification, NotificationRecipient
 def staff_dashboard_view(request):
     contact_messages = ContactMessage.objects.filter(is_resolved=False).count()
     orders = Order.objects.filter(status=Order.OrderStatus.PENDING).count()
+    pending_reviews = ProductReview.objects.filter(is_published=False).count()
+    custom_requests = CustomRequest.objects.exclude(status=CustomRequest.Status.REJECTED).count()
+
+    recent_custom_requests = CustomRequest.objects.exclude(status=CustomRequest.Status.REJECTED).select_related('user').order_by('-created_at')[:4]
     last_messages = ContactMessage.objects.exclude(is_resolved=True).select_related('user').order_by('-created_at')[:4]
     last_orders = Order.objects.all().select_related('user','address').order_by('-created_at')[:4]
-    recent_notifications = NotificationRecipient.objects.filter(
-        recipient=request.user
-    ).select_related('notification').order_by('-notification__created_at')[:4]
-    pending_reviews = ProductReview.objects.filter(is_published=False).count()
+    recent_notifications = NotificationRecipient.objects.filter(recipient=request.user).select_related('notification').order_by('-notification__created_at')[:4]
     recent_reviews = ProductReview.objects.all().select_related('user','product').order_by('-created_at')[:4]
     context = {
         'contact_messages': contact_messages,
@@ -28,6 +30,8 @@ def staff_dashboard_view(request):
         'recent_notifications': recent_notifications,
         'pending_reviews':pending_reviews,
         'recent_reviews':recent_reviews,
+        'custom_requests': custom_requests,
+        'recent_custom_requests': recent_custom_requests,
     }
     return render(request, 'staff/staff_dashboard.html', context)
 
@@ -140,3 +144,17 @@ def review_approve_view(request, review_id):
             return redirect('staff:staff_reviews_list')
     return render(request, 'staff/staff_review_detail.html', {'review':review})
 
+@staff_member_required
+def custom_requests_list_view(request):
+    filter_status = request.GET.get('status','')
+    custom_requests = CustomRequest.objects.select_related('user').order_by('-created_at')
+    if filter_status:
+        custom_requests = custom_requests.filter(status=filter_status)
+    paginator = Paginator(custom_requests, 2)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    context = {
+        'page_obj': page_obj,
+        'type_choices': CustomRequest.Status.choices,
+        'current_status': filter_status,
+    }
+    return render(request, 'staff/staff_custom_requests.html', context)
