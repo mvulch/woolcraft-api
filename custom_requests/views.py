@@ -62,8 +62,8 @@ def custom_request_detail_view(request, request_id):
                     notify_staff(type=Notification.Type.NEW_REQUEST,
                                  message=f'Нов отговор на заявка #{custom_request.id}',
                                  link=f'/custom_requests/custom-request-detail/{custom_request.id}', )
-                return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
                 messages.success(request, 'Съобщението е изпратено.')
+                return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
         elif action == 'update_status' and request.user.is_staff:
             new_status = request.POST.get('status')
             if new_status in dict(CustomRequest.Status.choices):
@@ -71,6 +71,8 @@ def custom_request_detail_view(request, request_id):
                 custom_request.save()
                 messages.success(request, 'Статусът е обновен успешно.')
                 return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
+            else:
+                messages.error(request, 'Невалиден статус.')
     context = {
         'custom_request': custom_request,
         'form': form,

@@ -10,7 +10,7 @@ class CustomRequestForm(forms.ModelForm):
             'description': 'Описание',
             'specific_colors': 'Конкретни желани цветове',
             'size': 'Ориентировъчен размер',
-            'reference_photo': 'Примерна снимка',
+            'reference_image': 'Примерна снимка',
         }
 
 class CustomRequestMessageForm(forms.ModelForm):
