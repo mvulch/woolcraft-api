@@ -21,14 +21,7 @@
             <div class="card-body p-3">
                 <div class="d-flex justify-content-between mb-3">
                     <h5 class="fw-bold mb-0">{{ custom_request.title }}</h5>
-                    <span class="badge
-                        {% if custom_request.status == 'PENDING' %}bg-warning text-dark
-                        {% elif custom_request.status == 'REVIEWED' %}bg-info
-                        {% elif custom_request.status == 'ACCEPTED' %}bg-success
-                        {% elif custom_request.status == 'REJECTED' %}bg-danger
-                        {% endif %}">
-                        {{ custom_request.get_status_display }}
-                    </span>
+                    {% include 'includes/custom_requests_color.html' %}
                 </div>
 
                 {% if user.is_staff %}
@@ -118,11 +111,96 @@
             </div>
         </div>
         {% endif %}
+        <!-- price offered -->
+        {% if user.is_staff and custom_request.status == 'PENDING' %}
+        <form method="post" class="mt-3">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="offer_price">
+            <div class="input-group">
+                <input type="number" name="offered_price" class="form-control"
+                       placeholder="Предложена цена" step="0.01" min="0" required>
+                <span class="input-group-text">€</span>
+                <button type="submit" class="btn btn-success">Предложи цена</button>
+            </div>
+        </form>
+        {% endif %}
+
+        <!-- client accepted -->
+        {% if not user.is_staff and custom_request.status == 'PRICE_OFFERED' %}
+        <div class="alert alert-info mt-3">
+            <p class="mb-2">Предложена цена: <strong>{{ custom_request.offered_price }} €</strong></p>
+            <div class="d-flex gap-2">
+                <a href="{% url 'custom_requests:address' custom_request.id %}"
+                   class="btn btn-success">
+                    <i class="bi bi-credit-card me-1"></i>Приемане и плащане на сумата
+                </a>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="client_decline">
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="bi bi-x-lg me-1"></i>Отхвърляне на сумата
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- client disagree -->
+        {% if custom_request.status == 'DECLINED' and user.is_staff %}
+        <div class="alert alert-warning mt-3">
+            <i class="bi bi-info-circle me-1"></i>
+            Клиентът не е приел предложената цена. Можете да предложите нова цена след допълнителна комуникация.
+        </div>
+        {% endif %}
     </div>
 
     <!-- information panel -->
-{% include 'includes/info_sticky_top_page_part.html' with item=custom_request %}
-
-
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm sticky-top m-4 p-1" style="top: 130px; z-index: 0; background-color: #e0ebeb; border-radius: 1.5rem;">
+            <div class="card-body" style="background-color: #e0ebeb; border-radius: 1.5rem;">
+                <h5 class="fw-bold mb-3">Обобщение</h5>
+                <div class="row g-2 mb-3">
+                        <div class="col-5 text-muted small">Статус:</div>
+                    <div class="col-7">
+                        {% include 'includes/custom_requests_color.html' %}
+                    </div>
+                    <div class="col-5 text-muted small">Дата:</div>
+                    <div class="col-7 small">{{ custom_request.created_at|date:"d.m.Y" }}</div>
+                    {% if custom_request.offered_price %}
+                        <div class="col-5 text-muted small">Предложена цена:</div>
+                        <div class="col-7 small">{{ custom_request.offered_price }} €</div>
+                    {% endif %}
+                </div>
+                {% if custom_request.address %}
+                <div class="mt-3 pt-3 border-top">
+                    <h6 class="fw-medium mb-2">Адрес за доставка</h6>
+                    <p class="mb-0 small">{{ custom_request.address.first_name }} {{ custom_request.address.last_name }}</p>
+                    <p class="mb-0 text-muted small">{{ custom_request.address.street }}</p>
+                    <p class="mb-0 text-muted small">{{ custom_request.address.city }}, {{ custom_request.address.postal_code }}</p>
+                    <p class="mb-0 text-muted small">{{ custom_request.address.country }}</p>
+                    <p class="mb-0 text-muted small">{{ custom_request.address.phone }}</p>
+                </div>
+                {% endif %}
+                {% if user.is_staff %}
+                <form method="post" class="mt-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_status">
+                    <label class="form-label small fw-medium">Смяна на статус</label>
+                    <select name="status" class="form-select form-select-sm mb-2">
+                        {% for value, label in custom_request.Status.choices %}
+                            <option value="{{ value }}"
+                                {% if custom_request.status == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-success btn-sm w-100">
+                        Запази статуса
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

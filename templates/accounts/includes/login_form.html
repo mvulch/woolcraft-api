@@ -3,20 +3,20 @@
     <input type="email"
            name="{{ form.email.name }}"
            class="form-control"
-           id="{{ form.email.id_for_label }}"
+           id="id_email"
            value="{{ form.email.value|default:'' }}"
            placeholder="name@ecample.com"
            required>
-    <label for="{{ form.email.id_for_label }}">Имейл адрес</label>
+    <label for="id_email">Имейл адрес</label>
 </div>
 <div class="form-floating mb-4">
     <input type="password"
            name="{{ form.password.name }}"
            class="form-control"
-           id="{{ form.password.id_for_label }}"
+           id="id_password"
            placeholder="Password"
            required>
-    <label for="{{ form.password.id_for_label }}">Парола</label>
+    <label for="id_password">Парола</label>
 </div>
 <button type="submit" class="btn btn-primary w-100">Вход</button>
 <a href="{% url 'accounts:password_reset' %}" class="text-muted small">Забравена парола?</a>

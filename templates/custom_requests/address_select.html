@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Избор на адрес | WoolCraft{% endblock %}
+{% block content %}
+<div class="row justify-content-center my-5">
+    <div class="col-12 col-lg-6">
+        <h3 class="h3-center fw-bold mb-4">Адрес за доставка</h3>
+        <form method="post">
+            {% csrf_token %}
+            {% for address in addresses %}
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="radio"
+                       name="address_id" id="address_{{ address.id }}"
+                       value="{{ address.id }}"
+                       {% if address == default_address %}checked{% endif %}
+                       required>
+                <label class="form-check-label w-100" for="address_{{ address.id }}">
+                    <div class="card border {% if address == default_address %}border-success{% else %}border-light{% endif %} p-3 ms-2">
+                        {% if address.is_default %}
+                            <span class="badge bg-success mb-1">По подразбиране</span>
+                        {% endif %}
+                        <p class="mb-0 fw-medium">{{ address.first_name }} {{ address.last_name }}</p>
+                        <p class="mb-0 text-muted small">{{ address.street }}</p>
+                        <p class="mb-0 text-muted small">{{ address.city }}, {{ address.postal_code }}</p>
+                        <p class="mb-0 text-muted small">{{ address.country }}</p>
+                        <p class="mb-0 text-muted small">{{ address.phone }}</p>
+                    </div>
+                </label>
+            </div>
+            {% endfor %}
+
+            <a href="{% url 'orders:address_create' %}?next={% url 'custom_requests:address' custom_request.id %}"
+               class="btn btn-outline-success btn-sm mb-4">
+                <i class="bi bi-plus-lg me-1"></i>Нов адрес
+            </a>
+
+            <div class="d-flex justify-content-center gap-2">
+                <button type="submit" class="btn btn-success px-4">
+                    <i class="bi bi-credit-card me-1"></i>Продължи към плащане
+                </button>
+                <a href="{% url 'custom_requests:custom_request_detail' custom_request.id %}"
+                   class="btn btn-outline-secondary">Обратно</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

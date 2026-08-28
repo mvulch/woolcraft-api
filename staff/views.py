@@ -90,17 +90,21 @@ def staff_order_detail_view(request, order_id):
 def notifications_view(request):
     notification_recipient = NotificationRecipient.objects.filter(
         recipient=request.user).select_related('notification').order_by('-notification__created_at')
-
+    filter_read = request.GET.get('read', '')
     filter_type = request.GET.get('type', '')
     if filter_type:
         notification_recipient = notification_recipient.filter(notification__type=filter_type)
-
+    if filter_read == 'unread':
+        notification_recipient = notification_recipient.filter(is_read=False)
+    elif filter_read == 'read':
+        notification_recipient = notification_recipient.filter(is_read=True)
     paginator = Paginator(notification_recipient, 2)
     page_obj = paginator.get_page(request.GET.get('page'))
     context = {
         'page_obj':page_obj,
         'type_choices': Notification.Type.choices,
-        'current_type':filter_type,
+        'current_type': filter_type,
+        'current_read': filter_read,
     }
     return render(request, 'staff/notifications.html', context)
 

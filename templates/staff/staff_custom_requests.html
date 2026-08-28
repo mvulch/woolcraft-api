@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}Персонализирани заявки | Служителски панел{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center my-5">
     <h3 class="fw-bold mb-0">Персонализирани заявки</h3>
     <a href="{% url 'staff:staff_dashboard' %}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-arrow-left me-1"></i>Табло
@@ -14,7 +14,7 @@
        class="btn btn-sm {% if not current_status %}btn-success{% else %}btn-outline-secondary{% endif %}">
         Всички
     </a>
-    {% for value, label in status_choices %}
+    {% for value, label in type_choices %}
     <a href="?status={{ value }}"
        class="btn btn-sm {% if current_status == value %}btn-success{% else %}btn-outline-secondary{% endif %}">
         {{ label }}
@@ -36,27 +36,20 @@
                 </tr>
             </thead>
             <tbody>
-                {% for req in page_obj %}
+                {% for custom_request in page_obj %}
                 <tr>
-                    <td class="text-muted small">#{{ req.id }}</td>
+                    <td class="text-muted small">#{{ custom_request.id }}</td>
                     <td>
-                        <p class="mb-0">{{ req.user.get_full_name }}</p>
-                        <p class="text-muted small mb-0">{{ req.user.email }}</p>
+                        <p class="mb-0">{{ custom_request.user.get_full_name }}</p>
+                        <p class="text-muted small mb-0">{{ custom_request.user.email }}</p>
                     </td>
-                    <td class="fw-medium">{{ req.title }}</td>
-                    <td class="text-muted small">{{ req.created_at|date:"d.m.Y" }}</td>
+                    <td class="fw-medium">{{ custom_request.title }}</td>
+                    <td class="text-muted small">{{ custom_request.created_at|date:"d.m.Y" }}</td>
                     <td>
-                        <span class="badge
-                            {% if req.status == 'PENDING' %}bg-warning text-dark
-                            {% elif req.status == 'REVIEWED' %}bg-info
-                            {% elif req.status == 'ACCEPTED' %}bg-success
-                            {% elif req.status == 'REJECTED' %}bg-danger
-                            {% endif %}">
-                            {{ req.get_status_display }}
-                        </span>
+                        {% include 'includes/custom_requests_color.html' %}
                     </td>
                     <td>
-                        <a href="{% url 'custom_requests:custom_request_detail' req.id %}"
+                        <a href="{% url 'custom_requests:custom_request_detail' custom_request.id %}"
                            class="btn btn-outline-success btn-sm">
                             Преглед
                         </a>

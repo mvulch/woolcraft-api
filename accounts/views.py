@@ -37,6 +37,7 @@ def login_view(request):
             if user is not None:
                 request.session['_old_session_key'] = request.session.session_key
                 login(request, user)
+                request.session.pop('cart_item_count', None)
                 # return redirect('accounts:profile')
                 return redirect('home')
             else:

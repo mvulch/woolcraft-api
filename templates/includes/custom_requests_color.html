@@ -1,0 +1,12 @@
+<span class="badge
+    {% if custom_request.status == 'PENDING' %}bg-warning text-dark
+    {% elif custom_request.status == 'PRICE_OFFERED' %}bg-info text-dark
+    {% elif custom_request.status == 'PAID' %}bg-info
+    {% elif custom_request.status == 'COMPLETED' %}bg-success
+    {% elif custom_request.status == 'SHIPPED' %}bg-primary
+    {% elif custom_request.status == 'DELIVERED' %}bg-success
+    {% elif custom_request.status == 'REJECTED' %}bg-danger
+    {% elif custom_request.status == 'DECLINED' %}bg-danger
+    {% endif %}">
+    {{ custom_request.get_status_display }}
+</span>

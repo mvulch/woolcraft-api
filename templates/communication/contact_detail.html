@@ -93,6 +93,35 @@
     </div>
 
     <!-- information panel -->
-    {% include 'includes/info_sticky_top_page_part.html' with item=contact_message %}
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm sticky-top p-5" style="top: 80px; z-index: 0;">
+            <div class="card-body" style="background-color: #e0ebeb; border-radius: 1.5rem;">
+                <h5 class="fw-bold mb-3">Информация</h5>
+                <div class="row g-2 mb-3">
+                        <div class="col-5 text-muted small">Статус:</div>
+                        <div class="col-7">
+                            {% if contact_message.is_resolved %}
+                                <span class="badge bg-success">Приключено</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Отворено</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-5 text-muted small">Дата:</div>
+                        <div class="col-7 small">{{ contact_message.created_at|date:"d.m.Y" }}</div>
+                    </div>
+
+                    {% if user.is_staff and not contact_message.is_resolved %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="resolve">
+                        <button type="submit" class="btn btn-outline-success w-100"
+                                onclick="return confirm('Маркирай като приключено?')">
+                            <i class="bi bi-check-lg me-1"></i>Маркирай като приключено
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
 </div>
 {% endblock %}

@@ -1,12 +1,18 @@
 from django.db import models
 from django.conf import settings
+from orders.models import Address
+
 # Create your models here.
 class CustomRequest(models.Model):
     class Status(models.TextChoices):
         PENDING = 'PENDING', 'Чакаща'
-        REVIEWED = 'REVIEWED', 'Прегледана'
-        ACCEPTED = 'ACCEPTED', 'Приета'
-        REJECTED = 'REJECTED', 'Отказана'
+        PRICE_OFFERED = 'PRICE_OFFERED', 'Предложена цена'
+        PAID = 'PAID', 'Платена'
+        COMPLETED = 'COMPLETED', 'Завършена'
+        SHIPPED = "SHIPPED", "Изпратена"
+        DELIVERED = "DELIVERED", "Доставена"
+        REJECTED = 'REJECTED', 'Отказана от персонала'
+        DECLINED = 'DECLINED', 'Отказана от клиента'
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='custom_requests')
     title = models.CharField(max_length=100)
     description = models.TextField()
@@ -16,7 +22,9 @@ class CustomRequest(models.Model):
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    is_finished = models.BooleanField(default=False)
+    offered_price = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    stripe_payment_id = models.CharField(max_length=200, blank=True)
+    address = models.ForeignKey(Address, on_delete=models.PROTECT, null=True, blank=True, related_name='custom_requests')
 
     class Meta:
         ordering = ['-created_at']

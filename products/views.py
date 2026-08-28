@@ -12,8 +12,8 @@ from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 def home_view(request):
-    latest_products = Product.objects.filter(is_active=True).order_by('created_at').prefetch_related('images')[:8]
-    recommended_articles = Article.objects.filter(is_published=True).order_by('created_at').prefetch_related('images')[:4]
+    latest_products = Product.objects.filter(is_active=True).order_by('-created_at').prefetch_related('images')[:8]
+    recommended_articles = Article.objects.filter(is_published=True).order_by('-created_at').prefetch_related('images')[:4]
     return render(request, 'home.html', {
         'latest_products': latest_products,
         'recommended_articles': recommended_articles,

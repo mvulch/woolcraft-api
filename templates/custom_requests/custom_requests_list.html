@@ -22,23 +22,16 @@
                 </tr>
             </thead>
             <tbody>
-            {% for req in page_obj %}
+            {% for custom_request in page_obj %}
                 <tr>
-                    <td class="text-muted small">#{{ req.id }}</td>
-                    <td class="fw-medium">{{ req.title }}</td>
-                    <td class="text-muted small">{{ req.created_at|date:"d.m.Y" }}</td>
+                    <td class="text-muted small">#{{ custom_request.id }}</td>
+                    <td class="fw-medium">{{ custom_request.title }}</td>
+                    <td class="text-muted small">{{ custom_request.created_at|date:"d.m.Y" }}</td>
                     <td>
-                        <span class="badge
-                            {% if req.status == 'PENDING' %}bg-warning text-dark
-                            {% elif req.status == 'REVIEWED' %}bg-info
-                            {% elif req.status == 'ACCEPTED' %}bg-success
-                            {% elif req.status == 'REJECTED' %}bg-danger
-                            {% endif %}">
-                            {{ req.get_status_display }}
-                        </span>
+                        {% include 'includes/custom_requests_color.html' %}
                     </td>
                     <td>
-                        <a href="{% url 'custom_requests:custom_request_detail' req.id %}"
+                        <a href="{% url 'custom_requests:custom_request_detail' custom_request.id %}"
                            class="btn btn-outline-success btn-sm">Преглед</a>
                     </td>
                 </tr>
