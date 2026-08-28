@@ -35,20 +35,21 @@
 </div>
 {% endif %}
 
+<!-- table for all -->
 <div class="card border-0 shadow-sm">
     <div class="table-responsive">
         <table class="table table-hover mb-0">
             <thead class="table-light">
-            <tr>
-                <th>#</th>
-                {% if is_staff_view %}
-                <th>Потребител</th>
-                {% endif %}
-                <th>Дата</th>
-                <th>Статус</th>
-                <th>Общо</th>
-                <th></th>
-            </tr>
+                <tr>
+                    <th>#</th>
+                    {% if is_staff_view %}
+                    <th>Потребител</th>
+                    {% endif %}
+                    <th>Дата</th>
+                    <th>Статус</th>
+                    <th>Общо</th>
+                    <th></th>
+                </tr>
             </thead>
             <tbody>
             {% for order in page_obj %}
@@ -66,7 +67,6 @@
                 </td>
                 <td class="fw-bold text-success">{{ order.total_price }} €</td>
                 <td>
-
                     {% if is_staff_view %}
                     <a href="{% url 'staff:staff_order_detail' order.id %}" class="btn btn-outline-success btn-sm">Преглед</a>
                     {% else %}

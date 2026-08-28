@@ -1,15 +1,23 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 from .models import Cart, CartItem, Address, Order, OrderItem
 from django.contrib import messages
 from .utils import update_cart_count
 from products.models import Product
+from custom_requests.models import CustomRequest
 from .forms import AddressForm
 from django.db import transaction
 from staff.utils import notify_staff
 from staff.models import Notification
+import stripe
+from django.conf import settings
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 @require_POST
@@ -228,3 +236,94 @@ def order_list_view(request):
         'is_staff_view': False,
     }
     return render(request, 'orders/order_list.html', context)
+
+@login_required
+def create_checkout_session(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    if order.status != Order.OrderStatus.PENDING:
+        messages.warning(request, 'Тази поръчка вече е обработена.')
+        return redirect('orders:order_detail',order_id=order.id)
+
+    line_items = []
+    for item in order.items.all():
+        line_items.append({
+            'price_data': {
+                'currency': 'eur',
+                'product_data': {'name': item.product.name if item.product else 'Продукт',},
+                'unit_amount': int(item.price_at_purchase * 100),
+            },
+            'quantity': item.quantity
+        })
+    session = stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        line_items=line_items,
+        mode='payment',
+        success_url=request.build_absolute_uri(reverse('orders:payment_success')) + '?session_id={CHECKOUT_SESSION_ID}',
+        cancel_url=request.build_absolute_uri(reverse('orders:order_detail', kwargs={'order_id': order.id})),
+        metadata={'order_id': order.id},
+    )
+    order.stripe_payment_id = session.id
+    order.save()
+    return redirect(session.url, code=303)
+
+@login_required
+def payment_success_view(request):
+    session_id = request.GET.get('session_id')
+    if not session_id:
+        return redirect('home')
+    session = stripe.checkout.Session.retrieve(session_id)
+    order_id = session.metadata['order_id']
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    if session.payment_status == 'paid' and order.status == Order.OrderStatus.PENDING:
+        order.status = Order.OrderStatus.PAID
+        order.save()
+        messages.success(request, f'Поръчка #{order.id} беше заплатена успешно.')
+        notify_staff(type=Notification.Type.NEW_ORDER,
+                     message=f'Поръчка #{order.id} беше заплатена от {request.user.get_full_name()}.',
+                     link=f'/staff/staff-order-detail/{order.id}', )
+    return redirect('orders:order_detail', order_id=order.id)
+
+@csrf_exempt
+def stripe_webhook(request):
+    print("DEBUG: webhook called")
+    payload = request.body
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+    print(f"DEBUG: sig_header = {sig_header}")
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+        print(f"DEBUG: event type = {event['type']}")
+    except ValueError as e:
+        print(f"DEBUG: ValueError = {e}")
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError as e:
+        print(f"DEBUG: SignatureVerificationError = {e}")
+        return HttpResponse(status=400)
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        if session.payment_status == 'paid':
+            try:
+                if 'order_id' in session['metadata']:
+                    order_id = session['metadata']['order_id']
+                    print(f"DEBUG webhook: order_id = {order_id}")
+                    order = Order.objects.get(id=order_id)
+                    if order.status == Order.OrderStatus.PENDING:
+                        order.status = Order.OrderStatus.PAID
+                        order.save()
+                        print(f"DEBUG webhook: order {order_id} marked as PAID")
+                elif 'custom_request_id' in session['metadata']:
+                    request_id = session['metadata']['custom_request_id']
+                    custom_request = CustomRequest.objects.get(id=request_id)
+                    custom_request.status = CustomRequest.Status.PAID
+                    custom_request.save()
+
+            except KeyError as e:
+                print(f"DEBUG webhook KeyError: {e}")
+            except Order.DoesNotExist:
+                print(f"DEBUG webhook: order {order_id} not found")
+            except CustomRequest.DoesNotExist:
+                print(f"DEBUG webhook: custom request {request_id} not found")
+            except Exception as e:
+                print(f"DEBUG webhook Exception: {e}")
+    return HttpResponse(status=200)
