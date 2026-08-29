@@ -30,7 +30,50 @@
             <h3 class="fw-bold mb-0">
                 {% if category %}{{ category.name }}{% else %}Всички продукти{% endif %}
             </h3>
-            <span class="text-muted small">{{ page_obj.paginator.count }} продукта</span>
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-muted small d-none d-sm-inline">{{ page_obj.paginator.count }} продукта</span>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown">
+                        Сортирай:
+                        {% if current_sort == 'price_asc' %}Цена ↑
+                        {% elif current_sort == 'price_desc' %}Цена ↓
+                        {% elif current_sort == 'name_asc' %}Име А-Я
+                        {% elif current_sort == 'name_desc' %}Име Я-А
+                        {% elif current_sort == 'oldest' %}Най-стари
+                        {% else %}Най-нови
+                        {% endif %}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item {% if current_sort == 'newest' %}active{% endif %}"
+                               href="?sort=newest&page=1">Най-нови</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item {% if current_sort == 'oldest' %}active{% endif %}"
+                               href="?sort=oldest&page=1">Най-стари</a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item {% if current_sort == 'price_asc' %}active{% endif %}"
+                               href="?sort=price_asc&page=1">Цена: ниска → висока</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item {% if current_sort == 'price_desc' %}active{% endif %}"
+                               href="?sort=price_desc&page=1">Цена: висока → ниска</a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item {% if current_sort == 'name_asc' %}active{% endif %}"
+                               href="?sort=name_asc&page=1">Име: А-Я</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item {% if current_sort == 'name_desc' %}active{% endif %}"
+                               href="?sort=name_desc&page=1">Име: Я-А</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
 
         {% if page_obj %}
@@ -41,7 +84,7 @@
             </div>
             {% endfor %}
         </div>
-        {% include 'includes/paginator.html' with extra_params="" %}
+        {% include 'includes/paginator.html' with extra_params="sort="|add:current_sort %}
 
     </div>
     {% else %}

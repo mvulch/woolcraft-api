@@ -1,5 +1,7 @@
 from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
+
 from .models import Product, Category, ProductReview
 from django.core.paginator import Paginator
 from orders.models import Cart, Order, OrderItem
@@ -41,7 +43,7 @@ def product_detail_view(request,category_slug,slug):
                 review.save()
                 notify_staff(type=Notification.Type.NEW_REVIEW,
                              message=f'Нов коментар от {request.user.get_full_name()} за продукт {product_detail}.',
-                             link=f'/staff/staff-review-approve/{review.id}')
+                             link=reverse('staff:staff_approve_review', args=[review.id]))
                 messages.success(request, f'Коментарът е създаден успешно и очаква одобрение от нашия екип.')
                 return redirect('products:product_detail', category_slug=category_slug, slug=slug)
         else:
@@ -78,13 +80,24 @@ def category_products_view(request, category_slug=None):
         category = get_object_or_404(Category,slug=category_slug)
         subcategory_id = category.subcategories.values('id')
         products = products.filter(Q(category=category) | Q(category_id__in=subcategory_id))
+    sort_options = {
+        'newest': '-created_at',
+        'oldest': 'created_at',
+        'price_asc': 'price',
+        'price_desc': '-price',
+        'name_asc': 'name',
+        'name_desc': '-name',
+    }
+    current_sort = request.GET.get('sort', 'newest')
+    products = products.order_by(sort_options.get(current_sort, '-created_at'))
+
     paginator = Paginator(products, 2)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context = {
         'category': category,
         'categories': categories,
-        #'products': products,
+        'current_sort': current_sort,
         'page_obj': page_obj
     }
     return render(request, 'products/category_products.html', context)
@@ -122,7 +135,7 @@ def review_edit_view(request, review_id):
             review.save()
             notify_staff(type=Notification.Type.NEW_REVIEW,
                          message=f'Редактиран коментар от {request.user.get_full_name()} за продукт {review.product}.',
-                         link=f'/staff/staff-review-approve/{review.id}')
+                         link=reverse('staff:staff_approve_review', args=[review.id]))
             messages.success(request, 'Отзивът е обновен и изчаква одобрение от нашия екип.')
             return redirect('products:product_detail', category_slug=review.product.category.slug, slug=review.product.slug)
     else:

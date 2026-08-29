@@ -10,9 +10,12 @@ from staff.utils import notify_staff
 from staff.models import Notification
 import stripe
 from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
-# Create your views here.
+
 @login_required
 def custom_request_create_view(request):
     if request.method == 'POST':
@@ -24,7 +27,7 @@ def custom_request_create_view(request):
             notify_staff(
                 type=Notification.Type.NEW_REQUEST,
                 message=f'Нова персонализирана заявка #{custom_request.id} от {custom_request.user.get_full_name()}',
-                link=f'/custom_requests/custom-request-detail/{custom_request.id}',
+                link=reverse('custom_requests:custom_request_detail', args=[custom_request.id]),
             )
             messages.success(request, 'Заявката Ви е изпратена успешно и очаква да бъде разгледана от нашия екип.')
             return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
@@ -66,7 +69,7 @@ def custom_request_detail_view(request, request_id):
                 else:
                     notify_staff(type=Notification.Type.NEW_REQUEST,
                                  message=f'Нов отговор на заявка #{custom_request.id}',
-                                 link=f'/custom_requests/custom-request-detail/{custom_request.id}', )
+                                 link=reverse('custom_requests:custom_request_detail', args=[custom_request.id]), )
                 messages.success(request, 'Съобщението е изпратено.')
                 return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
         elif action == 'update_status' and request.user.is_staff:
@@ -80,15 +83,18 @@ def custom_request_detail_view(request, request_id):
                 messages.error(request, 'Невалиден статус.')
 
         elif action == 'offer_price' and request.user.is_staff:
-            price = request.POST.get('offered_price')
-            if price:
-                custom_request.offered_price = price
+            price_form = OfferPriceForm(request.POST)
+            if price_form.is_valid():
+                custom_request.offered_price = price_form.cleaned_data['offered_price']
                 custom_request.status = CustomRequest.Status.PRICE_OFFERED
-                custom_request.save()
+                custom_request.save(update_fields=['offered_price','status','updated_at'])
                 # notify user for offered price
                 messages.success(request, 'Цената е предложена.')
                 return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
-
+            else:
+                for field, errors in price_form.errors.items():
+                    for e in errors:
+                        messages.error(request, e)
         elif action == 'client_decline' and not request.user.is_staff:
             if custom_request.status == CustomRequest.Status.PRICE_OFFERED:
                 custom_request.status = CustomRequest.Status.DECLINED
@@ -96,7 +102,7 @@ def custom_request_detail_view(request, request_id):
                 notify_staff(
                     type=Notification.Type.NEW_REQUEST,
                     message=f'Отказана цена на персонализирана заявка #{custom_request.id} от клиент {custom_request.user.get_full_name()}',
-                    link=f'/custom_requests/custom-request-detail/{custom_request.id}', )
+                    link=reverse('custom_requests:custom_request_detail', args=[custom_request.id]),)
                 messages.info(request, 'Отказахте предложената цена.')
                 return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
     context = {
@@ -109,21 +115,16 @@ def custom_request_detail_view(request, request_id):
 def custom_request_address_view(request, request_id):
     custom_request = get_object_or_404(CustomRequest, id=request_id, user=request.user, status=CustomRequest.Status.PRICE_OFFERED)
 
-    if not custom_request:
-        return redirect('home')
-
     addresses = Address.objects.filter(user=request.user)
     if not addresses.exists():
         messages.error(request, 'Добавете адрес за доставка')
-        return redirect(
-            f"{reverse('orders:address_create')}?next={reverse('custom_requests:address', kwargs={'request_id': custom_request.id})}"
-        )
+        return redirect('orders:address_create')
     if request.method == 'POST':
         address_id = request.POST.get('address_id')
         address = get_object_or_404(Address, id=address_id, user=request.user)
         custom_request.address = address
         custom_request.save()
-        return redirect('custom_requests:payment', request_id=custom_request.id)
+        return redirect('custom_requests:custom_request_payment', request_id=custom_request.id)
 
     context = {
         'custom_request': custom_request,
@@ -136,6 +137,9 @@ def custom_request_address_view(request, request_id):
 @login_required
 def custom_request_payment_view(request, request_id):
     custom_request = get_object_or_404(CustomRequest, id=request_id, user=request.user, status=CustomRequest.Status.PRICE_OFFERED)
+    if custom_request.offered_price is None:
+        messages.error(request, 'Все още не е предложена цена за заявката.')
+        return redirect('custom_request:custom_request_detail', request_id=custom_request.id)
     line_items = [{
         'price_data': {
             'currency': 'eur',
@@ -155,7 +159,7 @@ def custom_request_payment_view(request, request_id):
         metadata={'custom_request_id': custom_request.id},
     )
     custom_request.stripe_payment_id = session.id
-    custom_request.save()
+    custom_request.save(update_fields=['stripe_id','updated_at'])
     return redirect(session.url, code=303)
 
 @login_required

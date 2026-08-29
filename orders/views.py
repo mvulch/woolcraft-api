@@ -16,6 +16,10 @@ import stripe
 from django.conf import settings
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -30,15 +34,12 @@ def create_and_add_cart_view(request, product_id):
     else:
         if not request.session.session_key:
             request.session.create()
-        print(f"add  to cart: session key = {request.session.session_key}")
         cart, cart_created = Cart.objects.get_or_create(session_key=request.session.session_key)
 
     cart_item, item_created = CartItem.objects.get_or_create(cart=cart, product=product, defaults={'quantity': 0})
 
     new_quantity = cart_item.quantity + requested_quantity
-    print(f"DEBUG: new_quantity = {new_quantity}")
-    print(f"DEBUG: cart_item.quantity = {cart_item.quantity}")
-    print(f"DEBUG: requested_quantity = {requested_quantity}")
+    #print(f"DEBUG: new_quantity = {new_quantity} cart_item.quantity = {cart_item.quantity} requested_quantity = {requested_quantity}")
     if new_quantity > product.stock_quantity:
         messages.warning(request, f"Недостатъчна наличност от артикул {product.name} - "
                                   f"брой налични продукти в магазина: {product.stock_quantity} - брой продукти във вашата кошница: {cart_item.quantity}")
@@ -99,8 +100,7 @@ def update_cart_view(request, cart_item_id):
                 cart_item.quantity += 1
                 cart_item.save()
             else:
-                messages.warning(request,
-                                 f"Достигната е максималната наличност от {cart_item.product.name}.")
+                messages.warning(request,f"Достигната е максималната наличност от {cart_item.product.name}.")
         elif action == 'decrease':
             if cart_item.quantity > 1:
                 cart_item.quantity -= 1
@@ -138,7 +138,6 @@ def address_create_view(request):
 def address_edit_view(request, address_id):
     address = get_object_or_404(Address, id=address_id, user=request.user)
     if request.method == 'POST':
-        print("debug: address_edit_view - is in post")
         form = AddressForm(request.POST, instance=address)
         if form.is_valid():
             form.save()
@@ -280,7 +279,7 @@ def payment_success_view(request):
         messages.success(request, f'Поръчка #{order.id} беше заплатена успешно.')
         notify_staff(type=Notification.Type.NEW_ORDER,
                      message=f'Поръчка #{order.id} беше заплатена от {request.user.get_full_name()}.',
-                     link=f'/staff/staff-order-detail/{order.id}', )
+                     link=reverse('staff:staff_order_detail', args=[order.id]), )
     return redirect('orders:order_detail', order_id=order.id)
 
 @csrf_exempt
