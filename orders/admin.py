@@ -4,9 +4,9 @@ from .models import Address, Cart, CartItem, Order, OrderItem, OrderStatusHistor
 
 @admin.register(Address)
 class AddressAdmin(admin.ModelAdmin):
-    list_display = ("user","street", "city", "country", "address_type")
+    list_display = ("user","street", "city", "country")
     search_fields = ("city", "country", "user__email")
-    list_filter = ("address_type", "is_default")
+    list_filter = ("is_default",)
     readonly_fields = ("created_at",)
 
 @admin.register(Cart)

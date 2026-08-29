@@ -4,10 +4,6 @@ from products.models import Product
 
 # Create your models here.
 class Address(models.Model):
-    class Types(models.TextChoices):
-        SHIPPING = "SHIPPING", "За доставка"
-        INVOICING = "INVOICING", "За фактуриране"
-
     user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE, related_name="addresses")
     first_name = models.CharField(max_length=25,blank=False)
     last_name = models.CharField(max_length=30,blank=False)
@@ -16,7 +12,6 @@ class Address(models.Model):
     city = models.CharField(max_length=30,blank=False)
     postal_code = models.CharField(max_length=10,blank=False)
     country = models.CharField(max_length=30,blank=False)
-    address_type = models.CharField(max_length=20, choices=Types.choices, default=Types.SHIPPING)
     is_default = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

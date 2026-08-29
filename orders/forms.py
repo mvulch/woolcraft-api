@@ -4,10 +4,7 @@ from .models import Address
 class AddressForm(forms.ModelForm):
     class Meta:
         model = Address
-        fields = ['first_name', 'last_name', 'phone', 'street', 'city', 'postal_code', 'country', 'address_type']
-        widgets = {
-            'address_type': forms.Select(attrs={'class': 'form-select '})
-        }
+        fields = ['first_name', 'last_name', 'phone', 'street', 'city', 'postal_code', 'country']
         labels = {
             'first_name': 'Име',
             'last_name': 'Фамилия',
@@ -16,5 +13,4 @@ class AddressForm(forms.ModelForm):
             'city': 'Град',
             'postal_code': 'Пощенски код',
             'country': 'Държава',
-            'address_type': 'Тип адрес',
         }
