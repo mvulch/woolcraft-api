@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.db.models import Avg
+from cloudinary.models import CloudinaryField
 
 
 # Create your models here.
@@ -99,7 +100,7 @@ class VideoCourse(models.Model):
         ADVANCED = "ADVANCED", "Advanced"
 
     product = models.OneToOneField(Product, on_delete=models.CASCADE, related_name = "video_course")
-    video_url = models.URLField(max_length=500, blank=False)
+    video = CloudinaryField('video', resource_type='video', blank=True, null=True)
     duration_minutes = models.PositiveIntegerField(blank=False)
     difficulty = models.CharField(max_length=20, choices=Difficulty.choices,default=Difficulty.BEGINNER)
 

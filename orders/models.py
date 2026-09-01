@@ -60,7 +60,6 @@ class CartItem(models.Model):
 
 class Order(models.Model):
     class OrderStatus(models.TextChoices):
-        PENDING = "PENDING", "Чакаща"
         PAID = "PAID", "Платена"
         SHIPPED = "SHIPPED", "Изпратена"
         DELIVERED = "DELIVERED", "Доставена"
@@ -68,7 +67,7 @@ class Order(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT,related_name="orders")
     address = models.ForeignKey(Address, on_delete=models.PROTECT)
-    status = models.CharField(max_length=15,choices=OrderStatus.choices,default=OrderStatus.PENDING)
+    status = models.CharField(max_length=15,choices=OrderStatus.choices,default=OrderStatus.PAID)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

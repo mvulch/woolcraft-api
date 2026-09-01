@@ -93,8 +93,7 @@
                     </div>
                     <div class="text-end">
                         <span class="badge
-                            {% if order.status == 'PENDING' %}bg-warning text-dark
-                            {% elif order.status == 'PAID' %}bg-info
+                            {% if order.status == 'PAID' %}bg-info
                             {% elif order.status == 'SHIPPED' %}bg-primary
                             {% elif order.status == 'DELIVERED' %}bg-success
                             {% elif order.status == 'CANCELLED' %}bg-danger
@@ -116,24 +115,17 @@
                     <a href="{% url 'staff:staff_custom_requests_list' %}"
                        class="btn btn-outline-success btn-sm">Всички</a>
                 </div>
-                {% for cr in recent_custom_requests %}
+                {% for custom_request in recent_custom_requests %}
                 <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
                     <div>
-                        <a href="{% url 'custom_requests:custom_request_detail' cr.id %}"
-                           class="text-decoration-none fw-medium">#{{ cr.id }}</a>
-                        <p class="text-muted small mb-0">{{ cr.title }}</p>
-                        <p class="text-muted small mb-0">{{ cr.user.get_full_name }}</p>
+                        <a href="{% url 'custom_requests:custom_request_detail' custom_request.id %}"
+                           class="text-decoration-none fw-medium">#{{ custom_request.id }}</a>
+                        <p class="text-muted small mb-0">{{ custom_request.title }}</p>
+                        <p class="text-muted small mb-0">{{ custom_request.user.get_full_name }}</p>
                     </div>
                     <div class="text-end">
-                        <span class="badge
-                            {% if cr.status == 'PENDING' %}bg-warning text-dark
-                            {% elif cr.status == 'REVIEWED' %}bg-info
-                            {% elif cr.status == 'ACCEPTED' %}bg-success
-                            {% elif cr.status == 'REJECTED' %}bg-danger
-                            {% endif %}">
-                            {{ cr.get_status_display }}
-                        </span>
-                        <p class="text-muted small mb-0">{{ cr.created_at|date:"d.m.Y H:i"  }}</p>
+                        {% include 'includes/custom_requests_color.html' %}
+                        <p class="text-muted small mb-0">{{ custom_request.created_at|date:"d.m.Y H:i"  }}</p>
                     </div>
                 </div>
                 {% empty %}

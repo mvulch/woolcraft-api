@@ -38,6 +38,10 @@
                 <a href="{% url 'communication:contact_messages_list' %}" class="btn btn-outline-success">
                     <i class="bi bi-bag me-1"></i>Моите запитвания
                 </a>
+                <!-- purchased video courses -->
+                <a href="{% url 'products:my_courses' %}" class="btn btn-outline-success">
+                    <i class="bi bi-play-btn me-1"></i>Моите курсове
+                </a>
                 <!-- staff panel -->
                 {% if request.user.is_staff %}
                 <a href="{% url 'staff:staff_dashboard' %}" class="btn btn-outline-success">

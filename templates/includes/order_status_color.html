@@ -1,6 +1,5 @@
 <span class="badge
-{% if order.status == 'PENDING' %} bg-warning text-dark
-{% elif order.status == 'PAID' %} bg-info
+{% if order.status == 'PAID' %} bg-info
 {% elif order.status == 'SHIPPED' %} bg-primary
 {% elif order.status == 'DELIVERED' %} bg-success
 {% elif order.status == 'CANCELLED' %} bg-danger

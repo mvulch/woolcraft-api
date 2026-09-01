@@ -2,7 +2,7 @@ from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 
-from .models import Product, Category, ProductReview
+from .models import Product, Category, ProductReview, VideoCourse
 from django.core.paginator import Paginator
 from orders.models import Cart, Order, OrderItem
 from .forms import ProductReviewForm
@@ -59,7 +59,13 @@ def product_detail_view(request,category_slug,slug):
         cart_item = cart.item.filter(product=product_detail).first()
         if cart_item:
             quantity_in_cart = cart_item.quantity
-
+    has_video_access = False
+    if request.user.is_authenticated and hasattr(product_detail, 'video_course'):
+        has_video_access = request.user.is_staff or OrderItem.objects.filter(
+            order__user=request.user,
+            product=product_detail,
+            order__status__in=(Order.OrderStatus.PAID, Order.OrderStatus.SHIPPED, Order.OrderStatus.DELIVERED,),
+        ).exists()
     context = {
         'product': product_detail,
         'max_quantity': product_detail.stock_quantity - quantity_in_cart,
@@ -67,6 +73,7 @@ def product_detail_view(request,category_slug,slug):
         'review_form': review_form,
         'can_review': can_review,
         'existing_review': existing_review,
+        'has_video_access': has_video_access,
     }
     return render(request, 'products/product_detail.html', context)
 
@@ -141,3 +148,26 @@ def review_edit_view(request, review_id):
     else:
         form = ProductReviewForm(instance=review)
     return render(request,'products/review_edit.html',{'review':review,'form':form})
+
+@login_required
+def my_courses_view(request):
+    purchased_product_ids = OrderItem.objects.filter(
+        order__user=request.user,
+        order__status__in=(Order.OrderStatus.PAID, Order.OrderStatus.SHIPPED, Order.OrderStatus.DELIVERED),
+    ).values_list('product_id', flat=True)
+    # course should be visible immediately after being paid
+    courses = VideoCourse.objects.filter(product_id__in=purchased_product_ids).select_related('product')
+    return render(request, 'products/my_courses.html', {'courses': courses})
+
+@login_required
+def course_watch_view(request, course_id):
+    course = get_object_or_404(VideoCourse.objects.select_related('product'), id=course_id)
+    has_access = OrderItem.objects.filter(
+        order__user=request.user,
+        product=course.product,
+        order__status__in=(Order.OrderStatus.PAID, Order.OrderStatus.SHIPPED, Order.OrderStatus.DELIVERED),
+    ).exists()
+    if not has_access:
+        messages.error(request, 'Нямате достъп до този курс.')
+        return redirect('products:my_courses')
+    return render(request, 'products/course_watch.html', {'course': course})

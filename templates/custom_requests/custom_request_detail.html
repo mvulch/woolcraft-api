@@ -117,11 +117,19 @@
             {% csrf_token %}
             <input type="hidden" name="action" value="offer_price">
             <div class="input-group">
-                <input type="number" name="offered_price" class="form-control"
-                       placeholder="Предложена цена" step="0.01" min="0" required>
+                <input type="number" name="{{ price_form.offered_price.name }}"
+                       class="form-control{% if price_form.offered_price.errors %} is-invalid{% endif %}"
+                       id="{{ price_form.offered_price.id_for_label }}"
+                       placeholder="Предложена цена"
+                       step="0.01" min="0.01" max="9999.99"
+                       value="{{ price_form.offered_price.value|default:'' }}"
+                       required>
                 <span class="input-group-text">€</span>
                 <button type="submit" class="btn btn-success">Предложи цена</button>
             </div>
+            {% if price_form.offered_price.errors %}
+            <div class="text-danger small mt-1">{{ price_form.offered_price.errors|striptags }}</div>
+            {% endif %}
         </form>
         {% endif %}
 

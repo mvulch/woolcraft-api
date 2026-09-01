@@ -106,9 +106,15 @@
                             <i class="bi bi-clock me-1"></i>{{ product.video_course.duration_minutes }} мин.
                         </span>
             </div>
-            <a href="{{ product.video_course.video_url }}" target="_blank" class="btn btn-outline-success w-100">
-                <i class="bi bi-play-circle me-1"></i>Гледай видео урока
+            {% if has_video_access %}
+            <a href="{% url 'products:course_watch' product.video_course.id %}" class="btn btn-outline-success w-100">
+                <i class="bi bi-play-circle me-1"></i>Гледай в Моите курсове
             </a>
+            {% else %}
+            <button type="button" class="btn btn-outline-secondary w-100" disabled>
+                <i class="bi bi-lock me-1"></i>Видео урокът е достъпен след покупка
+            </button>
+            {% endif %}
         </div>
         {% endif %}
         {% if product.description %}

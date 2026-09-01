@@ -16,8 +16,9 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
 STRIPE_PUBLIC_KEY = env('STRIPE_PUBLIC_KEY')
 STRIPE_SECRET_KEY = env('STRIPE_SECRET_KEY')
 STRIPE_WEBHOOK_SECRET = env('STRIPE_WEBHOOK_SECRET')
-# Application definition
 
+CLOUDINARY_URL=env('CLOUDINARY_URL')
+# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -32,6 +33,7 @@ INSTALLED_APPS = [
     'communication',
     'orders.apps.OrdersConfig',
     'staff',
+    'cloudinary',
 ]
 
 AUTH_USER_MODEL = 'accounts.CustomUser'

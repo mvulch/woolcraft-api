@@ -13,7 +13,7 @@ from .models import Notification, NotificationRecipient
 @staff_member_required
 def staff_dashboard_view(request):
     contact_messages = ContactMessage.objects.filter(is_resolved=False).count()
-    orders = Order.objects.filter(status=Order.OrderStatus.PENDING).count()
+    orders = Order.objects.filter(status=Order.OrderStatus.PAID).count()
     pending_reviews = ProductReview.objects.filter(is_published=False).count()
     custom_requests = CustomRequest.objects.exclude(status=CustomRequest.Status.REJECTED).count()
 

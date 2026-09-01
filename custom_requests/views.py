@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.urls import reverse
 from orders.models import Address
 from .models import CustomRequest
-from .forms import CustomRequestForm, CustomRequestMessageForm
+from .forms import CustomRequestForm, CustomRequestMessageForm, OfferPriceForm
 from staff.utils import notify_staff
 from staff.models import Notification
 import stripe
@@ -54,6 +54,7 @@ def custom_request_detail_view(request, request_id):
         custom_request = get_object_or_404(CustomRequest.objects.select_related('user').prefetch_related('messages__user'),
                                           id=request_id, user=request.user)
     form = CustomRequestMessageForm()
+    price_form = OfferPriceForm()
     if request.method == 'POST':
         action = request.POST.get('action')
         if action == 'message':
@@ -91,10 +92,7 @@ def custom_request_detail_view(request, request_id):
                 # notify user for offered price
                 messages.success(request, 'Цената е предложена.')
                 return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
-            else:
-                for field, errors in price_form.errors.items():
-                    for e in errors:
-                        messages.error(request, e)
+
         elif action == 'client_decline' and not request.user.is_staff:
             if custom_request.status == CustomRequest.Status.PRICE_OFFERED:
                 custom_request.status = CustomRequest.Status.DECLINED
@@ -108,6 +106,7 @@ def custom_request_detail_view(request, request_id):
     context = {
         'custom_request': custom_request,
         'form': form,
+        'price_form': price_form,
     }
     return render(request, 'custom_requests/custom_request_detail.html', context)
 
