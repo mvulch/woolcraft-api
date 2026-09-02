@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import F
 from django.conf import settings
 from products.models import Product
 
@@ -76,6 +77,13 @@ class Order(models.Model):
     class Meta:
         verbose_name = "Поръчка"
         verbose_name_plural = "Поръчки"
+
+    def restock_items(self):
+        for item in self.items.all():
+            if item.product_id:
+                Product.objects.filter(id=item.product_id).update(
+                    stock_quantity=F('stock_quantity') + item.quantity
+                )
     def __str__(self):
         return f"Order #{self.id} of {self.user.username}"
 

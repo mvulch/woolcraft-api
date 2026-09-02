@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ course.product.name }} | Моите курсове | WoolCraft{% endblock %}
+{% block content %}
+<div class="row justify-content-center my-5">
+    <div class="col-12 col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="fw-bold m-0">{{ course.product.name }}</h3>
+
+            <a href="{% url 'products:my_courses' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Моите курсове
+            </a>
+        </div>
+
+        <div class="d-flex gap-2 align-items-center mb-4">
+            <span class="badge bg-success">{{ course.get_difficulty_display }}</span>
+            <span class="text-muted small">
+                <i class="bi bi-clock me-1"></i>{{ course.duration_minutes }} мин.
+            </span>
+        </div>
+
+
+        {% if course.video %}
+        <video controls class="w-100 rounded" style="max-height: 550px; background: #000;">
+            <source src="{{ course.video.url }}">
+        </video>
+        {% else %}
+        <div class="alert alert-light border text-center py-5 mb-0">
+            <i class="bi bi-hourglass-split text-muted" style="font-size: 3rem;"></i>
+            <p class="text-muted mt-3 mb-0">Видеото предстои да бъде добавено.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

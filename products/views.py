@@ -157,7 +157,13 @@ def my_courses_view(request):
     ).values_list('product_id', flat=True)
     # course should be visible immediately after being paid
     courses = VideoCourse.objects.filter(product_id__in=purchased_product_ids).select_related('product')
-    return render(request, 'products/my_courses.html', {'courses': courses})
+    paginator = Paginator(courses, 2)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    context = {
+        'courses': courses,
+        'page_obj': page_obj,
+    }
+    return render(request, 'products/my_courses.html',context)
 
 @login_required
 def course_watch_view(request, course_id):

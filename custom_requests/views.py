@@ -136,9 +136,12 @@ def custom_request_address_view(request, request_id):
 @login_required
 def custom_request_payment_view(request, request_id):
     custom_request = get_object_or_404(CustomRequest, id=request_id, user=request.user, status=CustomRequest.Status.PRICE_OFFERED)
+    if custom_request.address is None:
+        messages.error(request, 'Добавете адрес за доставка, преди да платите.')
+        return redirect('custom_requests:address', request_id=custom_request.id)
     if custom_request.offered_price is None:
         messages.error(request, 'Все още не е предложена цена за заявката.')
-        return redirect('custom_request:custom_request_detail', request_id=custom_request.id)
+        return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
     line_items = [{
         'price_data': {
             'currency': 'eur',
