@@ -3,13 +3,12 @@ from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST
-from .models import Cart, CartItem, Address, Order, OrderItem
+from .models import Cart, CartItem, Address, Order
 from django.contrib import messages
-from .utils import update_cart_count
+from .utils import update_cart_count, fulfill_cart_checkout
 from products.models import Product
 from custom_requests.models import CustomRequest
 from .forms import AddressForm
-from django.db import transaction
 from staff.utils import notify_staff
 from staff.models import Notification
 import stripe
@@ -168,8 +167,6 @@ def address_set_default_view(request, address_id):
 
 @login_required
 def check_out_view(request):
-    """Checks if the user has a cart and a default address, then transfers the items from cart to order
-    with an atomic transaction; during this transfer the concrete products are locked using select_for_update"""
     cart = Cart.objects.filter(user=request.user).prefetch_related('item__product').first()
     if not cart or not cart.item.exists():
         messages.error(request, 'Количката Ви е празна.')
@@ -183,36 +180,42 @@ def check_out_view(request):
         address_id = request.POST.get('address_id')
         address = get_object_or_404(Address, id=address_id, user=request.user)
 
-        try:
-            with transaction.atomic():
-                for item in cart.item.all():
-                    product = Product.objects.select_for_update().get(id=item.product.id)
-                    if not item.quantity <= product.stock_quantity:
-                        raise ValueError(
-                            f'Продукт - {item.product.name} е изчерпан.'
-                        )
-                        # messages.error(request, f'Izcherpan produkt - {item.product.name}')
-                        # return redirect('orders:cart_detail')
-
-                order = Order.objects.create(user=request.user, address=address, total_price=cart.get_total())
-                notify_staff(type=Notification.Type.NEW_ORDER,
-                             message=f'Нова поръчка #{order.id} от {request.user.get_full_name()}.',
-                             link=f'/staff/staff-order-detail/{order.id}',)
-                for item in cart.item.all():
-                    product = Product.objects.get(id=item.product.id)
-                    OrderItem.objects.create(order=order, product=product, quantity=item.quantity,
-                                             price_at_purchase=product.price)
-                    product.stock_quantity -= item.quantity
-                    product.save()
-                cart.item.all().delete()
-                update_cart_count(request, cart)
-
-            messages.success(request, f'Поръчката Ви е успешно създадена.')
-            return redirect('orders:order_detail', order_id=order.id)
-        except ValueError as e:
-            messages.error(request, str(e))
+        cart_items = list(cart.item.select_related('product').exclude(product__isnull=True))
+        if not cart_items:
+            messages.error(request, 'Количката Ви е празна.')
             return redirect('orders:cart_detail')
 
+        for item in cart_items:
+            if item.quantity > item.product.stock_quantity:
+                messages.error(request, f'Продукт - {item.product.name} е изчерпан.')
+                return redirect('orders:cart_detail')
+
+        line_items = []
+        for item in cart_items:
+            line_items.append({
+                'price_data': {
+                    'currency': 'eur',
+                    'product_data': {'name': item.product.name},
+                    'unit_amount': int(item.product.price * 100),
+                },
+                'quantity': item.quantity,
+            })
+
+        items_json = json.dumps([[item.product_id, item.quantity] for item in cart_items])
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=line_items,
+            mode='payment',
+            success_url=request.build_absolute_uri(reverse('orders:payment_success')) + '?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=request.build_absolute_uri(reverse('orders:cart_detail')),
+            metadata={
+                'kind': 'cart_order',
+                'user_id': request.user.id,
+                'address_id': address.id,
+                'items': items_json,
+            },
+        )
+        return redirect(session.url, code=303)
 
     context = {'cart': cart, 'items': cart.item.all(), 'addresses': addresses,
                'default_address': addresses.filter(is_default=True).first()}
@@ -237,45 +240,16 @@ def order_list_view(request):
     return render(request, 'orders/order_list.html', context)
 
 @login_required
-def create_checkout_session(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
-    if order.status != Order.OrderStatus.PENDING:
-        messages.warning(request, 'Тази поръчка вече е обработена.')
-        return redirect('orders:order_detail',order_id=order.id)
-
-    line_items = []
-    for item in order.items.all():
-        line_items.append({
-            'price_data': {
-                'currency': 'eur',
-                'product_data': {'name': item.product.name if item.product else 'Продукт',},
-                'unit_amount': int(item.price_at_purchase * 100),
-            },
-            'quantity': item.quantity
-        })
-    session = stripe.checkout.Session.create(
-        payment_method_types=['card'],
-        line_items=line_items,
-        mode='payment',
-        success_url=request.build_absolute_uri(reverse('orders:payment_success')) + '?session_id={CHECKOUT_SESSION_ID}',
-        cancel_url=request.build_absolute_uri(reverse('orders:order_detail', kwargs={'order_id': order.id})),
-        metadata={'order_id': order.id},
-    )
-    order.stripe_payment_id = session.id
-    order.save()
-    return redirect(session.url, code=303)
-
-@login_required
 def payment_success_view(request):
     session_id = request.GET.get('session_id')
     if not session_id:
         return redirect('home')
     session = stripe.checkout.Session.retrieve(session_id)
-    order_id = session.metadata['order_id']
-    order = get_object_or_404(Order, id=order_id, user=request.user)
-    if session.payment_status == 'paid' and order.status == Order.OrderStatus.PENDING:
-        order.status = Order.OrderStatus.PAID
-        order.save()
+    order, created = fulfill_cart_checkout(session)
+    if not order or order.user_id != request.user.id:
+        messages.error(request, 'Плащането не можа да бъде потвърдено. Ако сумата е била удържана, моля, свържете се с нас.')
+        return redirect('orders:cart_detail')
+    if created:
         messages.success(request, f'Поръчка #{order.id} беше заплатена успешно.')
         notify_staff(type=Notification.Type.NEW_ORDER,
                      message=f'Поръчка #{order.id} беше заплатена от {request.user.get_full_name()}.',
@@ -293,36 +267,45 @@ def stripe_webhook(request):
             payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
         )
         print(f"DEBUG: event type = {event['type']}")
-    except ValueError as e:
-        print(f"DEBUG: ValueError = {e}")
+    except ValueError:
+        logger.warning('Stripe webhook: malformed payload')
         return HttpResponse(status=400)
-    except stripe.error.SignatureVerificationError as e:
-        print(f"DEBUG: SignatureVerificationError = {e}")
+    except stripe.error.SignatureVerificationError:
+        logger.warning('Stripe webhook: signature verification failed')
         return HttpResponse(status=400)
-    if event['type'] == 'checkout.session.completed':
-        session = event['data']['object']
-        if session.payment_status == 'paid':
-            try:
-                if 'order_id' in session['metadata']:
-                    order_id = session['metadata']['order_id']
-                    print(f"DEBUG webhook: order_id = {order_id}")
-                    order = Order.objects.get(id=order_id)
-                    if order.status == Order.OrderStatus.PENDING:
-                        order.status = Order.OrderStatus.PAID
-                        order.save()
-                        print(f"DEBUG webhook: order {order_id} marked as PAID")
-                elif 'custom_request_id' in session['metadata']:
-                    request_id = session['metadata']['custom_request_id']
-                    custom_request = CustomRequest.objects.get(id=request_id)
-                    custom_request.status = CustomRequest.Status.PAID
-                    custom_request.save()
+    if event['type'] != 'checkout.session.completed':
+        return HttpResponse(status=200)
+    session = event['data']['object']
+    if session.payment_status != 'paid':
+        return HttpResponse(status=200)
 
-            except KeyError as e:
-                print(f"DEBUG webhook KeyError: {e}")
-            except Order.DoesNotExist:
-                print(f"DEBUG webhook: order {order_id} not found")
-            except CustomRequest.DoesNotExist:
-                print(f"DEBUG webhook: custom request {request_id} not found")
-            except Exception as e:
-                print(f"DEBUG webhook Exception: {e}")
+    metadata = getattr(session, 'metadata', None) or {}
+    try:
+        if 'kind' in metadata and metadata['kind'] == 'cart_order':
+            order, created = fulfill_cart_checkout(session)
+            if created:
+                logger.info('Order %s created by webhook', order.id)
+                notify_staff(
+                    type=Notification.Type.NEW_ORDER,
+                    message=f'Поръчка #{order.id} беше заплатена.',
+                    link=reverse('staff:staff_order_detail', args=[order.id]),)
+            else:
+                logger.info('Stripe session %s not fulfilled by webhook (already fulfilled or unavailable)', session.id)
+        elif 'custom_request_id' in metadata:
+            request_id = metadata['custom_request_id']
+            updated = CustomRequest.objects.filter(id=request_id, status=CustomRequest.Status.PRICE_OFFERED).update(status=CustomRequest.Status.PAID)
+            if updated:
+                logger.info('Custom request %s marked PAID by webhook', request_id)
+                notify_staff(
+                    type=Notification.Type.NEW_REQUEST,
+                    message=f'Персонализирана поръчка #{request_id} беше заплатена.',
+                    link=reverse('custom_requests:custom_request_detail', args=[request_id]),
+                )
+            else:
+                logger.info('Custom request %s not transitioned by webhook (already paid or missing)', request_id)
+        else:
+            logger.warning('Stripe webhook: session %s has no recognised metadata', session.id)
+    except Exception:
+        logger.exception('Stripe webhook: failed to process session %s', session.id)
+        return HttpResponse(status=500)
     return HttpResponse(status=200)

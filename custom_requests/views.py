@@ -8,6 +8,7 @@ from .models import CustomRequest
 from .forms import CustomRequestForm, CustomRequestMessageForm, OfferPriceForm
 from staff.utils import notify_staff
 from staff.models import Notification
+from .utils import mark_order_paid
 import stripe
 from django.conf import settings
 import logging
@@ -161,7 +162,7 @@ def custom_request_payment_view(request, request_id):
         metadata={'custom_request_id': custom_request.id},
     )
     custom_request.stripe_payment_id = session.id
-    custom_request.save(update_fields=['stripe_id','updated_at'])
+    custom_request.save(update_fields=['stripe_payment_id','updated_at'])
     return redirect(session.url, code=303)
 
 @login_required
@@ -170,14 +171,16 @@ def custom_request_payment_success_view(request):
     if not session_id:
         return redirect('home')
     session = stripe.checkout.Session.retrieve(session_id)
-    custom_request_id = session.metadata['custom_request_id']
+    metadata = getattr(session, 'metadata', None) or {}
+    custom_request_id = metadata['custom_request_id'] if 'custom_request_id' in metadata else None
+    if not custom_request_id:
+        logger.warning('Stripe session %s hsa no custom_request_id metadata',session_id)
+        return redirect('home')
     custom_request = get_object_or_404(CustomRequest, id=custom_request_id, user=request.user)
 
-    if session.payment_status == 'paid':
-        custom_request.status = CustomRequest.Status.PAID
-        custom_request.save()
-        messages.success(request, f'Поръчката беше заплатена успешно. Очаквайте скоро да бъде изработена!')
+    if session.payment_status == 'paid' and mark_order_paid(custom_request_id):
+        messages.success(request, f'Поръчка #{custom_request.id} беше заплатена успешно. Очаквайте скоро да бъде изработена!')
         notify_staff(type=Notification.Type.NEW_REQUEST,
-                     message=f'Персонализирана поръчка #{custom_request.id} беше заплатена от {request.user.get_full_name()}.',
-                     link=f'/custom_requests/custom-request-detail/{custom_request.id}', )
+                 message=f'Персонализирана поръчка #{custom_request.id} беше заплатена от {request.user.get_full_name()}.',
+                 link=reverse('custom_requests:custom_request_detail', args=[custom_request.id]),)
     return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
