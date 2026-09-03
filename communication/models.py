@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from cloudinary.models import CloudinaryField
 
 # Create your models here.
 class Article(models.Model):
@@ -22,7 +23,7 @@ class Article(models.Model):
 
 class ArticleImage(models.Model):
     article = models.ForeignKey(Article,on_delete = models.CASCADE, related_name="images")
-    image = models.ImageField(upload_to="communication/articles/")
+    image = CloudinaryField('Снимка на статия', resource_type='image', blank=True, null=True)
     is_primary = models.BooleanField(default=False)
     alt_text = models.CharField(max_length=120, blank=True)
     class Meta:

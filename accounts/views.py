@@ -52,7 +52,6 @@ def login_view(request):
 
 @login_required
 def profile_view(request):
-    print(f"Context user is: {request.user}")
     return render(request, 'accounts/profile.html', {'user': request.user})
 
 class CustomPasswordChangeView(PasswordChangeView):

@@ -1,4 +1,6 @@
 from django import forms
+from django.core.files.uploadedfile import UploadedFile
+
 from .models import CustomRequest, CustomRequestMessage
 from decimal import Decimal
 
@@ -9,11 +11,14 @@ def validate_client_images(image):
     # if empty
     if not image:
         return image
+
+    if isinstance(image, UploadedFile):
+        if image.size > MAX_IMAGE_SIZE:
+            raise forms.ValidationError(f'Твърде голям файл. Максимален размер: {MAX_IMAGE_SIZE // (1024 * 1024)} MB.')
+
     content_type = getattr(image, 'content_type', None)
     if content_type is None:
         return image
-    if image.size > MAX_IMAGE_SIZE:
-        raise forms.ValidationError(f'Твърде голям файл. Максимален размер: {MAX_IMAGE_SIZE//(1024*1024)} MB.')
     if content_type not in ALLOWED_IMAGE_TYPES:
         raise forms.ValidationError('Непозволен формат. Изберете изображение във формат PNG, JPEG или WebP.')
     return image
@@ -48,6 +53,6 @@ class OfferPriceForm(forms.Form):
         error_messages={
             'invalid': 'Въведете валидна цена.',
             'min_value': 'Цената трябва да е положително число.',
-            'max_value': 'Цената надвишава максималната допустима стойност..',
+            'max_value': 'Цената надвишава максималната допустима стойност.',
         }
     )

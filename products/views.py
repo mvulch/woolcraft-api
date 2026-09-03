@@ -139,6 +139,7 @@ def review_edit_view(request, review_id):
         if form.is_valid():
             review = form.save(commit=False)
             review.is_published = False
+            review.is_rejected = False
             review.save()
             notify_staff(type=Notification.Type.NEW_REVIEW,
                          message=f'Редактиран коментар от {request.user.get_full_name()} за продукт {review.product}.',

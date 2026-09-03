@@ -11,6 +11,7 @@ from .models import Notification, NotificationRecipient
 from orders.models import OrderStatusHistory
 from orders.utils import build_order_timeline
 from django.db import transaction
+from django.db.models import F, Sum
 from accounts.models import UserNotification
 from accounts.utils import notify_user
 
@@ -20,7 +21,7 @@ from accounts.utils import notify_user
 def staff_dashboard_view(request):
     contact_messages = ContactMessage.objects.filter(is_resolved=False).count()
     orders = Order.objects.filter(status=Order.OrderStatus.PAID).count()
-    pending_reviews = ProductReview.objects.filter(is_published=False).count()
+    pending_reviews = ProductReview.objects.filter(is_published=False, is_rejected=False).count()
     custom_requests = CustomRequest.objects.exclude(status=CustomRequest.Status.REJECTED).count()
 
     recent_custom_requests = CustomRequest.objects.exclude(status=CustomRequest.Status.REJECTED).select_related('user').order_by('-created_at')[:4]
@@ -146,9 +147,11 @@ def reviews_view(request):
     reviews_list = ProductReview.objects.select_related('user', 'product')
     filter_type = request.GET.get('filter', 'all')
     if filter_type == 'not_published':
-        reviews_list = reviews_list.filter(is_published=False)
+        reviews_list = reviews_list.filter(is_published=False, is_rejected=False)
     elif filter_type == 'published':
         reviews_list = reviews_list.filter(is_published=True)
+    elif filter_type == 'rejected':
+        reviews_list = reviews_list.filter(is_rejected=True)
     paginator = Paginator(reviews_list, 2)
     page_obj = paginator.get_page(request.GET.get('page'))
     context = {
@@ -159,24 +162,34 @@ def reviews_view(request):
 
 @staff_member_required
 def review_approve_view(request, review_id):
-    review = get_object_or_404(ProductReview, id=review_id)
+    review = get_object_or_404(ProductReview.objects.select_related('user', 'product__category'), id=review_id)
     if request.method == 'POST':
         action = request.POST.get('action')
         if action == 'approve':
             review.is_published = True
-            review.save()
+            review.is_rejected = False
+            review.save(update_fields=['is_published', 'is_rejected'])
             messages.success(request, f'Коментарът е одобрен.')
             notify_user(user=review.user, type=UserNotification.Type.REVIEW_APPROVED,
                         message=f'Отзив #{review.id} за продукт {review.product.name} беше одобрен.',
-                        link=reverse('staff:staff_approve_review', args=[review.id]),)
+                        link=reverse('products:product_detail',
+                                     args=[review.product.category.slug, review.product.slug]),)
         elif action == 'disapprove':
-            review.delete()
+            review.is_published = False
+            review.is_rejected = True
+            review.rejection_count = F('rejection_count') + 1
+            review.save(update_fields=['is_published', 'is_rejected', 'rejection_count'])
+            review.refresh_from_db(fields=['rejection_count'])
             messages.error(request, f'Коментарът е отхвърлен.')
             notify_user(user=review.user, type=UserNotification.Type.REVIEW_APPROVED,
-                        message=f'Отзив #{review.id} за продукт {review.product.name} беше отхвърлен.',
-                        link=reverse('staff:staff_approve_review', args=[review.id]),)
-            return redirect('staff:staff_reviews_list')
-    return render(request, 'staff/staff_review_detail.html', {'review':review})
+                        message=f'Отзив #{review.id} за продукт {review.product.name} беше отхвърлен. '
+                                f'Можете да го редактирате и да го изпратите отново за преглед.',
+                        link=reverse('products:review_edit', args=[review.id]),)
+        return redirect('staff:staff_approve_review', review_id=review.id)
+    total_rejections = ProductReview.objects.filter(user=review.user).aggregate(
+        total=Sum('rejection_count'))['total'] or 0
+    context = {'review': review, 'total_rejections': total_rejections}
+    return render(request, 'staff/staff_review_detail.html', context)
 
 @staff_member_required
 def custom_requests_list_view(request):

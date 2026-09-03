@@ -145,12 +145,21 @@
     <h4 class="fw-bold mb-4">Коментари</h4>
     {% if user.is_authenticated %}
         {% if existing_review %}
-            <div class="alert alert-success d-flex justify-content-between align-items-center">
-                <i class="bi bi-check-circle me-1"></i>Вече сте оставили отзив за този продукт.
-                <a href="{% url 'products:review_edit' existing_review.id %}" class="btn btn-outline-success btn-sm">
-                    <i class="bi bi-pencil me-1"></i>Редактирай
-                </a>
-            </div>
+            {% if existing_review.is_rejected %}
+                <div class="alert alert-danger d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-x-circle me-1"></i>Вашият отзив за този продукт беше отхвърлен. Можете да го редактирате и изпратите отново.</span>
+                    <a href="{% url 'products:review_edit' existing_review.id %}" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-pencil me-1"></i>Редактирай
+                    </a>
+                </div>
+            {% else %}
+                <div class="alert alert-success d-flex justify-content-between align-items-center">
+                    <i class="bi bi-check-circle me-1"></i>Вече сте оставили отзив за този продукт.
+                    <a href="{% url 'products:review_edit' existing_review.id %}" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-pencil me-1"></i>Редактирай
+                    </a>
+                </div>
+            {% endif %}
         {% elif can_review %}
             {% include 'includes/review_form.html' with form=review_form form_title="Оставете коментар" review_submit_hidden=True submit_icon="bi-send" submit_label="Изпрати" %}
         {% else %}

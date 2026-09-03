@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
 from orders.models import Address
-
+from cloudinary.models import CloudinaryField
 # Create your models here.
 class CustomRequest(models.Model):
     class Status(models.TextChoices):
@@ -18,7 +18,7 @@ class CustomRequest(models.Model):
     description = models.TextField()
     specific_colors = models.CharField(max_length=80, blank=True)
     size = models.CharField(max_length=80)
-    reference_image = models.ImageField(upload_to='custom_requests/',blank=True)
+    reference_image = CloudinaryField('Снимка от заявка', resource_type='image', blank=True, null=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

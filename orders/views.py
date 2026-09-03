@@ -45,7 +45,7 @@ def create_and_add_cart_view(request, product_id):
     else:
         cart_item.quantity = new_quantity
         cart_item.save()
-        print(f"DEBUG: updating count, cart={cart.id}")
+        #print(f"DEBUG: updating count, cart={cart.id}")
         update_cart_count(request, cart)
         messages.success(request, f"Артикул {product.name} беше добавен в количката.")
 
@@ -81,10 +81,17 @@ def cart_detail_view(request):
     return render(request, 'orders/cart_detail.html', context)
 
 
+def _owns_cart(request, cart):
+    if request.user.is_authenticated:
+        return cart.user_id == request.user.id
+    session_key = request.session.session_key
+    return bool(session_key) and cart.session_key == session_key
+
+
 @require_POST
 def remove_from_cart_view(request, cart_item_id):
     cart_item = get_object_or_404(CartItem.objects.select_related('cart'), id=cart_item_id)
-    if cart_item.cart.user == request.user or cart_item.cart.session_key == request.session.session_key:
+    if _owns_cart(request, cart_item.cart):
         cart_item.delete()
     return redirect('orders:cart_detail')
 
@@ -93,7 +100,11 @@ def remove_from_cart_view(request, cart_item_id):
 def update_cart_view(request, cart_item_id):
     cart_item = get_object_or_404(CartItem.objects.select_related('cart'), id=cart_item_id)
     action = request.POST.get('action')
-    if cart_item.cart.user == request.user or cart_item.cart.session_key == request.session.session_key:
+    if _owns_cart(request, cart_item.cart):
+        if cart_item.product is None:
+            cart_item.delete()
+            messages.warning(request, "Артикулът вече не се предлага и беше премахнат от количката.")
+            return redirect('orders:cart_detail')
         if action == 'increase':
             if cart_item.product.stock_quantity > cart_item.quantity:
                 cart_item.quantity += 1
@@ -259,15 +270,14 @@ def payment_success_view(request):
 
 @csrf_exempt
 def stripe_webhook(request):
-    print("DEBUG: webhook called")
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
-    print(f"DEBUG: sig_header = {sig_header}")
+    #print(f"DEBUG: sig_header = {sig_header}")
     try:
         event = stripe.Webhook.construct_event(
             payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
         )
-        print(f"DEBUG: event type = {event['type']}")
+        #print(f"DEBUG: event type = {event['type']}")
     except ValueError:
         logger.warning('Stripe webhook: malformed payload')
         return HttpResponse(status=400)

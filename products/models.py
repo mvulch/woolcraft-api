@@ -8,7 +8,7 @@ from cloudinary.models import CloudinaryField
 class Category(models.Model):
     name = models.CharField(max_length=120, blank=False,unique=True)
     description = models.TextField(blank=True)
-    image = models.ImageField(upload_to='categories/', blank=True, null=True)
+    image = CloudinaryField('Снимка на категория', resource_type='image', blank=True, null=True)
     slug = models.SlugField(max_length=100, blank=False,unique=True)
     parent = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True,related_name="subcategories")
 
@@ -52,6 +52,7 @@ class Product(models.Model):
     def __str__(self):
         return self.name
     class Meta:
+        ordering = ['-created_at']
         verbose_name = 'Продукт'
         verbose_name_plural = 'Продукти'
 
@@ -68,7 +69,7 @@ class ProductAttribute(models.Model):
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product,on_delete = models.CASCADE, related_name="images")
-    image = models.ImageField(upload_to="products/")
+    image = CloudinaryField('Снимка на продукт', resource_type='image', blank=True, null=True)
     is_primary = models.BooleanField(default=False)
     alt_text = models.CharField(max_length=120, blank=True)
     class Meta:
@@ -84,6 +85,8 @@ class ProductReview(models.Model):
     comment = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_published = models.BooleanField(default=False)
+    is_rejected = models.BooleanField(default=False)
+    rejection_count = models.PositiveIntegerField(default=0)
     class Meta:
         unique_together = ('user','product')
         ordering = ['-created_at']
@@ -100,7 +103,7 @@ class VideoCourse(models.Model):
         ADVANCED = "ADVANCED", "Advanced"
 
     product = models.OneToOneField(Product, on_delete=models.CASCADE, related_name = "video_course")
-    video = CloudinaryField('video', resource_type='video', blank=True, null=True)
+    video = CloudinaryField('Видео курс', resource_type='video', blank=True, null=True)
     duration_minutes = models.PositiveIntegerField(blank=False)
     difficulty = models.CharField(max_length=20, choices=Difficulty.choices,default=Difficulty.BEGINNER)
 
