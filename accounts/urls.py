@@ -1,5 +1,5 @@
 from django.urls import path, reverse_lazy
-from .views import register_view, login_view, profile_view, CustomPasswordChangeView, CustomLogoutView
+from .views import register_view, login_view, profile_view, CustomPasswordChangeView, CustomLogoutView, user_notifications_view, user_notification_is_read_view
 from django.contrib.auth import views as auth_views
 
 app_name = 'accounts'
@@ -25,5 +25,8 @@ urlpatterns = [
     ), name='password_reset_confirm'),
 
     path('password-reset/complete/', auth_views.PasswordResetCompleteView.as_view(template_name='accounts/password_reset_complete.html'), name='password_reset_complete'),
+
+    path('notifications/', user_notifications_view, name='notifications'),
+    path('notification/<int:notification_id>/read/', user_notification_is_read_view, name='notification_read'),
 
 ]

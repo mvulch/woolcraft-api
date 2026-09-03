@@ -28,9 +28,37 @@
     </div>
     {% endif %}
 </div>
-
 <div class="{% if is_staff_view %}row g-4 {% else %}d-flex justify-content-center{% endif %}">
     <div class="{% if is_staff_view %}col-12 col-lg-8{% else %}col-12 col-lg-5{% endif %}">
+
+        {% if timeline %}
+        <div class="card border-1 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-start justify-content-center">
+                    {% for step in timeline %}
+                    <div class="d-flex flex-column align-items-center" style="min-width: 100px;">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center
+                            {% if step.reached %}bg-{{ step.color }} text-white{% else %}bg-light text-muted border{% endif %}"
+                             style="width: 48px; height: 48px;">
+                            <i class="bi {{ step.icon }} fs-5"></i>
+                        </div>
+                        <p class="small mb-0 text-center mt-2 {% if step.current %}fw-bold{% else %}text-muted{% endif %}">
+                            {{ step.label }}
+                        </p>
+                        {% if step.timestamp %}
+                        <p class="text-muted mb-0 text-center" style="font-size: 0.7rem;">{{ step.timestamp|date:"d.m.Y H:i" }}</p>
+                        {% endif %}
+                    </div>
+                    {% if not forloop.last %}
+                    <div class="{% if step.reached and not step.current %}bg-success{% else %}bg-secondary-subtle{% endif %}"
+                         style="flex: 1; height: 3px; margin-top: 22px; min-width: 24px;"></div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="card border-1 shadow-sm mb-4">
             <div class="card-body p-4">
                 <h5 class="fw-bold mb-3">Детайли на поръчката</h5>
@@ -58,12 +86,19 @@
         <div class="card border-1 shadow-sm mb-4">
             <div class="card-body p-4">
                 <h5 class="fw-bold mb-3">Адрес за доставка</h5>
-                <p class="mb-1">{{ order.address.first_name }} {{ order.address.last_name }}</p>
-                <p class="mb-1 text-muted small">Улица: {{ order.address.street }}</p>
-                <p class="mb-1 text-muted small">Град: {{ order.address.city }}</p>
-                <p class="mb-1 text-muted small">Пощенски код: {{ order.address.postal_code }}</p>
-                <p class="mb-1 text-muted small">Страна: {{ order.address.country }}</p>
-                <p class="mb-0 text-muted small">Телефонен номер: {{ order.address.phone }}</p>
+                <p class="mb-2 fw-medium">{{ order.address.first_name }} {{ order.address.last_name }}</p>
+                <div class="row g-2">
+                    <div class="col-6 text-muted small">Улица:</div>
+                    <div class="col-6 small">{{ order.address.street }}</div>
+                    <div class="col-6 text-muted small">Град:</div>
+                    <div class="col-6 small">{{ order.address.city }}</div>
+                    <div class="col-6 text-muted small">Пощенски код:</div>
+                    <div class="col-6 small">{{ order.address.postal_code }}</div>
+                    <div class="col-6 text-muted small">Страна:</div>
+                    <div class="col-6 small">{{ order.address.country }}</div>
+                    <div class="col-6 text-muted small">Телефонен номер:</div>
+                    <div class="col-6 small">{{ order.address.phone }}</div>
+                </div>
             </div>
         </div>
 

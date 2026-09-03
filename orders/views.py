@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 from .models import Cart, CartItem, Address, Order
 from django.contrib import messages
-from .utils import update_cart_count, fulfill_cart_checkout
+from .utils import update_cart_count, fulfill_cart_checkout, build_order_timeline
 from products.models import Product
 from custom_requests.models import CustomRequest
 from .forms import AddressForm
@@ -225,7 +225,8 @@ def check_out_view(request):
 def order_detail_view(request, order_id):
     order = get_object_or_404(Order.objects.select_related('address').prefetch_related('items__product'),
                               id=order_id, user=request.user)
-    return render(request, 'orders/order_detail.html', {'order':order, 'is_staff_view':False})
+    context = {'order': order, 'is_staff_view': False, 'timeline': build_order_timeline(order)}
+    return render(request, 'orders/order_detail.html', context)
 
 @login_required
 def order_list_view(request):

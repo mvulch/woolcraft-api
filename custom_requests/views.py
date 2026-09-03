@@ -8,6 +8,8 @@ from .models import CustomRequest
 from .forms import CustomRequestForm, CustomRequestMessageForm, OfferPriceForm
 from staff.utils import notify_staff
 from staff.models import Notification
+from accounts.models import UserNotification
+from accounts.utils import notify_user
 from .utils import mark_order_paid
 import stripe
 from django.conf import settings
@@ -66,8 +68,9 @@ def custom_request_detail_view(request, request_id):
                 message.request = custom_request
                 message.save()
                 if request.user.is_staff:
-                    # notification for user
-                    pass
+                    notify_user(user=custom_request.user, type=UserNotification.Type.CUSTOM_REQUEST_MESSAGE,
+                                message=f'Получен отговор на заявка #{custom_request.id}.',
+                                link=reverse('custom_requests:custom_request_detail', args=[custom_request.id]), )
                 else:
                     notify_staff(type=Notification.Type.NEW_REQUEST,
                                  message=f'Нов отговор на заявка #{custom_request.id}',
@@ -80,6 +83,10 @@ def custom_request_detail_view(request, request_id):
                 custom_request.status = new_status
                 custom_request.save()
                 messages.success(request, 'Статусът е обновен успешно.')
+                notify_user(user=custom_request.user, type=UserNotification.Type.CUSTOM_REQUEST_STATUS,
+                            message=f'Статусът на заявка #{custom_request.id} е сменен на {custom_request.get_status_display()}.',
+                            link=reverse('custom_requests:custom_request_detail', args=[custom_request.id]), )
+
                 return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
             else:
                 messages.error(request, 'Невалиден статус.')
@@ -90,7 +97,10 @@ def custom_request_detail_view(request, request_id):
                 custom_request.offered_price = price_form.cleaned_data['offered_price']
                 custom_request.status = CustomRequest.Status.PRICE_OFFERED
                 custom_request.save(update_fields=['offered_price','status','updated_at'])
-                # notify user for offered price
+                notify_user(user=custom_request.user, type=UserNotification.Type.CUSTOM_REQUEST_PRICE,
+                            message=f'Получена ценова оферта за заявка #{custom_request.id}.',
+                            link=reverse('custom_requests:custom_request_detail', args=[custom_request.id]), )
+
                 messages.success(request, 'Цената е предложена.')
                 return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
 

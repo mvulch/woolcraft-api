@@ -72,6 +72,7 @@ TEMPLATES = [
                 'accounts.context_processors.login_credentials',
                 'orders.context_processors.cart_item_count',
                 'staff.context_processors.staff_notification_count',
+                'accounts.context_processors.user_notification_count',
             ],
         },
     },

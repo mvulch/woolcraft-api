@@ -4,10 +4,14 @@ from django.http import Http404
 from django.shortcuts import render, get_object_or_404
 from django.shortcuts import redirect
 from django.contrib import messages
+from django.urls import reverse
 from .models import ContactMessage, Article, ArticleImage
 from .forms import ContactMessageForm, ContactMessageReplyForm
 from staff.utils import notify_staff
 from staff.models import Notification
+from accounts.models import UserNotification
+from accounts.utils import notify_user
+
 
 # Create your views here.
 @login_required
@@ -33,7 +37,7 @@ def create_contact_view(request):
             messages.success(request,"Съобщението Ви е изпратено успешно.")
             notify_staff(type=Notification.Type.NEW_CONTACT,
                          message=f'Ново запитване от {request.user.get_full_name()} на тема {contact_message.subject}.',
-                         link=f'/communication/conversation/{contact_message.id}', )
+                         link=reverse('communication:conversation', args=[contact_message.id]),)
 
             return redirect('communication:contact_detail', contact_message_id=contact_message.id)
     else:
@@ -52,7 +56,7 @@ def contact_detail_view(request, contact_message_id):
         if action == 'resolve':
             contact_message.is_resolved = True
             contact_message.save()
-            messages.success(request,'Казусът е отбелзн като приключен.')
+            messages.success(request,'Казусът е отбелязан като приключен.')
             if request.user.is_staff:
                 return redirect('staff:staff_contact_messages')
             return redirect('communication:contact_messages_list')
@@ -64,6 +68,15 @@ def contact_detail_view(request, contact_message_id):
                 reply.user = request.user
                 reply.message = contact_message
                 reply.save()
+                if request.user.is_staff:
+                    notify_user(user=contact_message.user, type=UserNotification.Type.CONTACT_REPLY,
+                                message=f'Получен отговор на съобщение #{contact_message.id}.',
+                                link=reverse('communication:contact_detail', args=[contact_message.id]), )
+                else:
+                    notify_staff(type=Notification.Type.NEW_CONTACT,
+                                 message=f'Отговор от {request.user.get_full_name()} на запитване {contact_message.id}.',
+                                 link=reverse('communication:contact_detail', args=[contact_message.id]), )
+
                 messages.success(request, "Съобщението Ви е добавено успешно.")
                 return redirect('communication:contact_detail', contact_message_id=contact_message_id)
 

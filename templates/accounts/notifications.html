@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Известия | WoolCraft{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center my-5">
+    <h3 class="fw-bold mb-0">Известия</h3>
+    <span class="text-muted small">{{ notifications|length }} общо</span>
+</div>
+<!-- filter type-->
+<div class="d-flex gap-2 mb-2 flex-wrap">
+    <a href="?read={{ current_read }}"
+       class="btn btn-sm {% if not current_type %}btn-success{% else %}btn-outline-secondary{% endif %}">
+        Всички типове
+    </a>
+    {% for value, label in type_choices %}
+    <a href="?type={{ value }}&read={{ current_read }}"
+       class="btn btn-sm {% if current_type == value %}btn-success{% else %}btn-outline-secondary{% endif %}">
+        {{ label }}
+    </a>
+    {% endfor %}
+</div>
+<!-- filter read -->
+<div class="d-flex gap-2 mb-4 flex-wrap">
+    <a href="?type={{ current_type }}"
+       class="btn btn-sm {% if not current_read %}btn-success{% else %}btn-outline-secondary{% endif %}">
+        Всички
+    </a>
+    <a href="?type={{ current_type }}&read=unread"
+       class="btn btn-sm {% if current_read == 'unread' %}btn-success{% else %}btn-outline-secondary{% endif %}">
+        Непрочетени
+    </a>
+    <a href="?type={{ current_type }}&read=read"
+       class="btn btn-sm {% if current_read == 'read' %}btn-success{% else %}btn-outline-secondary{% endif %}">
+        Прочетени
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        {% for notification in page_obj %}
+        <div class="d-flex gap-3 p-3 border-bottom {% if not notification.is_read %}bg-light{% endif %}">
+            <i class="bi
+                {% if notification.type == 'REVIEW_APPROVED' %}bi-star-fill text-warning
+                {% elif notification.type == 'REVIEW_DELETED' %}bi-star text-danger
+                {% elif notification.type == 'ORDER_STATUS' %}bi-bag text-success
+                {% elif notification.type == 'CONTACT_REPLY' %}bi-envelope text-primary
+                {% elif notification.type == 'REQUEST_MESSAGE' %}bi-chat text-info
+                {% elif notification.type == 'REQUEST_STATUS' %}bi-arrow-repeat text-success
+                {% elif notification.type == 'CUSTOM_REQUEST_STATUS' %}bi-inbox text-success
+                {% elif notification.type == 'CUSTOM_REQUEST_PRICE' %}bi-tag text-warning
+                {% elif notification.type == 'CUSTOM_REQUEST_MESSAGE' %}bi-chat-dots text-info
+                {% else %}bi-bell text-secondary
+                {% endif %} fs-5 mt-1 flex-shrink-0"></i>
+            <div class="flex-grow-1">
+                <p class="mb-0">{{ notification.message }}</p>
+                <p class="text-muted small mb-0">
+                    {{ notification.created_at|date:"d.m.Y H:i" }}
+                </p>
+            </div>
+            {% if notification.link %}
+            <a href="{% url 'accounts:notification_read' notification.id %}"
+               class="btn btn-outline-success btn-sm align-self-center flex-shrink-0">
+                Преглед
+            </a>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="text-center py-5">
+            <i class="bi bi-bell text-muted" style="font-size: 3rem;"></i>
+            <p class="text-muted mt-3">Няма известия.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% include 'includes/paginator.html' with extra_params="type="|add:current_type|add:"&read="|add:current_read %}{% endblock %}

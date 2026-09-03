@@ -13,6 +13,40 @@ def update_cart_count(request, cart):
     count = cart.item.aggregate(total=Sum('quantity'))['total'] or 0
     request.session['cart_item_count'] = count
 
+ORDER_TIMELINE_STEPS = (
+    (Order.OrderStatus.PAID, 'bi-check', 'info'),
+    (Order.OrderStatus.SHIPPED, 'bi-truck', 'primary'),
+    (Order.OrderStatus.DELIVERED, 'bi-bag-check', 'success'),
+)
+
+
+def build_order_timeline(order):
+    if order.status == Order.OrderStatus.CANCELLED:
+        return None
+
+    statuses = [status for status, _, _ in ORDER_TIMELINE_STEPS]
+    current_index = statuses.index(order.status)
+    status_labels = dict(Order.OrderStatus.choices)
+
+    history_by_status = {}
+    for entry in order.order_status_history.order_by('changed_at'):
+        history_by_status[entry.new_status] = entry.changed_at
+
+    steps = []
+    for index, (status, icon, color) in enumerate(ORDER_TIMELINE_STEPS):
+        reached = index <= current_index
+        is_current = index == current_index
+        timestamp = order.created_at if status == Order.OrderStatus.PAID else history_by_status.get(status)
+        steps.append({
+            'label': status_labels[status],
+            'icon': icon,
+            'color': color,
+            'reached': reached,
+            'current': is_current,
+            'timestamp': timestamp if reached else None,
+        })
+    return steps
+
 def fulfill_cart_checkout(session):
 
     if session.payment_status != 'paid':

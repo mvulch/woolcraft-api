@@ -1,11 +1,13 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordChangeView, LogoutView
-from django.shortcuts import render, redirect
+from django.core.paginator import Paginator
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.urls import reverse_lazy
-
 from .forms import RegistrationForm, LoginForm
+from .models import UserNotification
+
 # Create your views here.
 def register_view(request):
     if request.user.is_authenticated:
@@ -59,3 +61,33 @@ class CustomPasswordChangeView(PasswordChangeView):
 
 class CustomLogoutView(LogoutView):
     next_page = 'home'
+
+@login_required
+def user_notifications_view(request):
+    filter_read = request.GET.get('read', '')
+    filter_type = request.GET.get('type', '')
+    notifications = UserNotification.objects.filter(recipient=request.user)
+    if filter_type:
+        notifications = notifications.filter(type=filter_type)
+    if filter_read == 'unread':
+        notifications = notifications.filter(is_read=False)
+    elif filter_read == 'read':
+        notifications = notifications.filter(is_read=True)
+    paginator = Paginator(notifications, 2)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    context = {
+        'page_obj': page_obj,
+        'type_choices': UserNotification.Type.choices,
+        'current_type': filter_type,
+        'current_read': filter_read,
+    }
+    return render(request, 'accounts/notifications.html', context)
+
+@login_required
+def user_notification_is_read_view(request, notification_id):
+    notification = get_object_or_404(UserNotification, id=notification_id, recipient=request.user)
+    notification.is_read=True
+    notification.save()
+    if notification.link:
+        return redirect(notification.link)
+    return redirect('accounts:notifications')

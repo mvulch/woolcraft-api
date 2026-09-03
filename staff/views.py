@@ -3,10 +3,16 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.contrib import messages
 from communication.models import ContactMessage
+from django.urls import reverse
 from orders.models import Order
 from products.models import ProductReview
 from custom_requests.models import CustomRequest
 from .models import Notification, NotificationRecipient
+from orders.models import OrderStatusHistory
+from orders.utils import build_order_timeline
+from django.db import transaction
+from accounts.models import UserNotification
+from accounts.utils import notify_user
 
 
 # Create your views here.
@@ -80,11 +86,29 @@ def staff_order_detail_view(request, order_id):
     if request.method == 'POST':
         new_status = request.POST.get('status')
         if new_status in dict(Order.OrderStatus.choices):
-            order.status = new_status
-            order.save()
+            with transaction.atomic():
+                locked_order = Order.objects.select_for_update().get(id=order.id)
+                old_status = locked_order.status
+                if old_status != new_status:
+                    if new_status == Order.OrderStatus.CANCELLED and old_status != Order.OrderStatus.CANCELLED:
+                        locked_order.restock_items()
+
+                    locked_order.status = new_status
+                    locked_order.save(update_fields=['status', 'updated_at'])
+                    OrderStatusHistory.objects.create(
+                        order=locked_order,
+                        old_status=old_status,
+                        new_status=new_status,
+                        changed_by=request.user,
+                    )
+            order.refresh_from_db()
             messages.success(request, f'Статусът на поръчка #{order.id} е обновен на {order.get_status_display()}.')
+            notify_user(user=order.user, type=UserNotification.Type.ORDER_STATUS,
+                        message=f'Статусът на поръчка #{order.id} е обновен на {order.get_status_display()}.',
+                        link=reverse('orders:order_detail', args=[order.id]),)
         return redirect('staff:staff_order_detail', order_id=order.id)
-    return render(request, 'orders/order_detail.html',{'order':order, 'is_staff_view': True})
+    context = {'order': order, 'is_staff_view': True, 'timeline': build_order_timeline(order)}
+    return render(request, 'orders/order_detail.html', context)
 
 @staff_member_required
 def notifications_view(request):
@@ -142,9 +166,15 @@ def review_approve_view(request, review_id):
             review.is_published = True
             review.save()
             messages.success(request, f'Коментарът е одобрен.')
+            notify_user(user=review.user, type=UserNotification.Type.REVIEW_APPROVED,
+                        message=f'Отзив #{review.id} за продукт {review.product.name} беше одобрен.',
+                        link=reverse('staff:staff_approve_review', args=[review.id]),)
         elif action == 'disapprove':
             review.delete()
             messages.error(request, f'Коментарът е отхвърлен.')
+            notify_user(user=review.user, type=UserNotification.Type.REVIEW_APPROVED,
+                        message=f'Отзив #{review.id} за продукт {review.product.name} беше отхвърлен.',
+                        link=reverse('staff:staff_approve_review', args=[review.id]),)
             return redirect('staff:staff_reviews_list')
     return render(request, 'staff/staff_review_detail.html', {'review':review})
 
