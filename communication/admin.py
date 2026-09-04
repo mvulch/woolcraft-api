@@ -26,6 +26,9 @@ class ContactMessageReplyAdmin(admin.ModelAdmin):
     search_fields = ("user__email", "text", "message")
     readonly_fields = ("created_at",)
 
+    def has_add_permission(self, request):
+        return False
+
 @admin.register(ChatSession)
 class ChatSessionAdmin(admin.ModelAdmin):
     list_display = ("user","started_at","last_activity_at")

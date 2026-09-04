@@ -7,7 +7,7 @@ class CustomRequestsAdmin(admin.ModelAdmin):
     list_display = ('title', 'status', 'created_at', 'updated_at',)
     search_fields = ('title', 'user__email', 'description',)
     list_filter = ('status',)
-    readonly_fields = ('created_at', 'updated_at',)
+    readonly_fields = ('created_at', 'updated_at','status','offered_price')
 
 @admin.register(CustomRequestMessage)
 class CustomRequestMessageAdmin(admin.ModelAdmin):

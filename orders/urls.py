@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (create_and_add_cart_view, cart_detail_view, remove_from_cart_view, update_cart_view,
                     address_list_view, address_create_view, address_edit_view, address_delete_view,
-                    address_set_default_view,
+                    address_set_default_view, address_usage_view,
                     order_detail_view, check_out_view, order_list_view,
                     payment_success_view, stripe_webhook)
 
@@ -16,6 +16,7 @@ urlpatterns = [
     path('address-edit/<int:address_id>/', address_edit_view, name='address_edit'),
     path('address-delete/<int:address_id>/', address_delete_view, name='address_delete'),
     path('address-set-default/<int:address_id>/', address_set_default_view, name='address_set_default'),
+    path('address-usage/<int:address_id>/', address_usage_view, name='address_usage'),
     path('check-out/', check_out_view, name='check_out'),
     path('order-detail/<int:order_id>', order_detail_view, name='order_detail'),
     path('order-list',order_list_view, name='order_list'),

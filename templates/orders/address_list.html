@@ -23,11 +23,17 @@
                         <p class="mb-1 text-muted small">{{ address.country }}</p>
                         <p class="mb-0 text-muted small">{{ address.phone }}</p>
                     </div>
-                    <!-- controls - edit, set default (if it is not), delete-->
+                    <!-- controls - edit or see usage, set default (if it is not), delete-->
                     <div class="d-flex flex-column gap-2">
-                         <a href="{% url 'orders:address_edit' address.id %}" class="btn btn-outline-secondary btn-sm" title="Редактирай адреса">
-                             <i class="bi bi-pencil"></i>
-                         </a>
+                        {% if address.orders_count or address.requests_count %}
+                            <a href="{% url 'orders:address_usage' address.id %}" class="btn btn-outline-secondary btn-sm" title="Виж поръчки с този адрес">
+                                <i class="bi bi-box-seam"></i>
+                            </a>
+                        {% else %}
+                            <a href="{% url 'orders:address_edit' address.id %}" class="btn btn-outline-secondary btn-sm" title="Редактирай адреса">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        {% endif %}
                         {% if not address.is_default %}
                             <form method="post" action="{% url 'orders:address_set_default' address.id %}">
                                 {% csrf_token %}

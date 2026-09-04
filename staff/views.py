@@ -1,6 +1,9 @@
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth import get_user_model
+from django.views.decorators.http import require_POST
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
+from django.utils.http import urlencode, url_has_allowed_host_and_scheme
 from django.contrib import messages
 from communication.models import ContactMessage
 from django.urls import reverse
@@ -11,9 +14,12 @@ from .models import Notification, NotificationRecipient
 from orders.models import OrderStatusHistory
 from orders.utils import build_order_timeline
 from django.db import transaction
-from django.db.models import F, Sum
+from django.db.models import F, Q, Sum
 from accounts.models import UserNotification
 from accounts.utils import notify_user
+from .utils import superuser_required
+
+User = get_user_model()
 
 
 # Create your views here.
@@ -185,6 +191,10 @@ def review_approve_view(request, review_id):
                         message=f'Отзив #{review.id} за продукт {review.product.name} беше отхвърлен. '
                                 f'Можете да го редактирате и да го изпратите отново за преглед.',
                         link=reverse('products:review_edit', args=[review.id]),)
+        next_url = request.POST.get('next')
+        if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()},
+                                                          require_https=request.is_secure()):
+            return redirect(next_url)
         return redirect('staff:staff_approve_review', review_id=review.id)
     total_rejections = ProductReview.objects.filter(user=review.user).aggregate(
         total=Sum('rejection_count'))['total'] or 0
@@ -205,3 +215,52 @@ def custom_requests_list_view(request):
         'current_status': filter_status,
     }
     return render(request, 'staff/staff_custom_requests.html', context)
+
+@superuser_required
+def manage_staff_view(request):
+    query = request.GET.get('q', '').strip()
+    show_all = request.GET.get('all') == '1'
+    if query:
+        users = User.objects.filter(
+            Q(email__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query)
+        )
+    elif show_all:
+        users = User.objects.all()
+    else:
+        users = User.objects.filter(is_staff=True)
+    users = users.order_by('email')
+    paginator = Paginator(users, 10)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    context = {
+        'page_obj': page_obj,
+        'query': query,
+        'show_all': show_all,
+        'all_param': '1' if show_all else '',
+    }
+    return render(request, 'staff/staff_manage_staff.html', context)
+
+@superuser_required
+@require_POST
+def toggle_staff_status_view(request, user_id):
+    target = get_object_or_404(User, id=user_id)
+    if target.is_superuser:
+        messages.error(request, 'Не можете да променяте правата на администратор оттук.')
+    elif target == request.user:
+        messages.error(request, 'Не можете да премахнете собствения си достъп.')
+    else:
+        target.is_staff = not target.is_staff
+        target.save(update_fields=['is_staff'])
+        if target.is_staff:
+            messages.success(request, f'{target.email} вече е част от персонала.')
+        else:
+            messages.success(request, f'{target.email} вече не е част от персонала.')
+    query = request.GET.get('q', '')
+    params = {}
+    if query:
+        params['q'] = query
+    if request.GET.get('all') == '1':
+        params['all'] = '1'
+    redirect_url = reverse('staff:staff_manage_staff')
+    if params:
+        redirect_url += f'?{urlencode(params)}'
+    return redirect(redirect_url)

@@ -34,6 +34,7 @@ class ProductReviewAdmin(admin.ModelAdmin):
     list_display = ("product", "user", "rating", "created_at")
     list_filter = ("is_published",)
     search_fileds = ("product__name","user__username",)
+    readonly_fields = ("is_published", "is_rejected", "rejection_count")
 
 
 @admin.register(VideoCourse)

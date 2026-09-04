@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db.models import ProtectedError, Count
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST
@@ -123,7 +124,10 @@ def update_cart_view(request, cart_item_id):
 
 @login_required
 def address_list_view(request):
-    addresses = Address.objects.filter(user=request.user)
+    addresses = Address.objects.filter(user=request.user).annotate(
+        orders_count=Count('order', distinct=True),
+        requests_count=Count('custom_requests', distinct=True),
+    )
     return render(request, 'orders/address_list.html', {'addresses': addresses})
 
 
@@ -147,6 +151,9 @@ def address_create_view(request):
 @login_required
 def address_edit_view(request, address_id):
     address = get_object_or_404(Address, id=address_id, user=request.user)
+    if address.order_set.exists() or address.custom_requests.exists():
+        messages.error(request, "Адресът е използван в поръчка или заявка и не може да бъде редактиран.")
+        return redirect('orders:address_list')
     if request.method == 'POST':
         form = AddressForm(request.POST, instance=address)
         if form.is_valid():
@@ -159,15 +166,32 @@ def address_edit_view(request, address_id):
 
 
 @login_required
+def address_usage_view(request, address_id):
+    address = get_object_or_404(Address, id=address_id, user=request.user)
+    orders = Order.objects.filter(address=address).order_by('-created_at')
+    custom_requests = CustomRequest.objects.filter(address=address).order_by('-created_at')
+    context = {
+        'address': address,
+        'orders': orders,
+        'custom_requests': custom_requests,
+    }
+    return render(request, 'orders/address_usage.html', context)
+
+
+@login_required
 def address_delete_view(request, address_id):
     address = get_object_or_404(Address, id=address_id, user=request.user)
     if request.method == 'POST':
-        address.delete()
-        messages.success(request, "Адресът беше премахнат успешно.")
+        try:
+            address.delete()
+            messages.success(request, "Адресът беше премахнат успешно.")
+        except ProtectedError:
+            messages.error(request, "Адресът не може да бъде изтрит, тъй като е използван в поръчка или заявка.")
     return redirect('orders:address_list')
 
 
 @login_required
+@require_POST
 def address_set_default_view(request, address_id):
     address = get_object_or_404(Address, id=address_id, user=request.user)
     Address.objects.filter(user=request.user).update(is_default=False)

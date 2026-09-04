@@ -9,7 +9,7 @@
     </a>
 </div>
 
-<div class="d-flex gap-2 mb-4">
+<div class="d-flex gap-2 mb-4 flex-wrap">
     <a href="?filter=not_published" class="btn btn-sm {% if current_filter == 'not_published' %}btn-success{% else %}btn-outline-secondary{% endif %}">
         Чакащи одобрение
     </a>
@@ -25,56 +25,73 @@
 </div>
 
 <div class="card border-0 shadow-sm">
-    <div class="card-body p-0">
-        {% for review in page_obj %}
-        <div class="p-4 border-bottom">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <div>
-                    <a href="{% url 'staff:staff_approve_review' review.id %}"
-                           class="text-decoration-none fw-medium">#{{ review.id }}</a>
-                    {% if review.is_rejected %}
-                        <span class="badge bg-danger">Отхвърлен</span>
-                        {% if review.rejection_count > 1 %}
-                            <span class="badge bg-secondary" title="Общ брой отхвърляния на този отзив">x{{ review.rejection_count }}</span>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Потребител</th>
+                    <th>Продукт</th>
+                    <th>Рейтинг</th>
+                    <th>Дата</th>
+                    <th>Статус</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for review in page_obj %}
+                <tr>
+                    <td class="text-muted small">#{{ review.id }}</td>
+                    <td>
+                        <p class="mb-0">{{ review.user.get_full_name }}</p>
+                        <p class="text-muted small mb-0">{{ review.user.email }}</p>
+                    </td>
+                    <td class="fw-medium">{{ review.product.name }}</td>
+                    <td class="text-nowrap">
+                        {% for i in "12345" %}
+                            <i class="bi bi-star{% if forloop.counter <= review.rating %}-fill text-warning{% endif %}"></i>
+                        {% endfor %}
+                    </td>
+                    <td class="text-muted small">{{ review.created_at|date:"d.m.Y" }}</td>
+                    <td>
+                        {% if review.is_rejected %}
+                            <span class="badge bg-danger">Отхвърлен</span>
+                        {% elif review.is_published %}
+                            <span class="badge bg-success">Одобрен</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Чака одобрение</span>
                         {% endif %}
-                    {% elif not review.is_published %}
-                        <span class="badge bg-warning text-dark">Чака одобрение</span>
-                    {% endif %}
-                    <p class="fw-medium mb-0">{{ review.user.get_full_name }}</p>
-                    <a href="{% url 'products:product_detail' review.product.category.slug review.product.slug %}"
-                       class="text-muted small text-decoration-none">
-                        {{ review.product.name }}
-                    </a>
-                </div>
-                <div class="text-end">
-                    {% for i in "12345" %}
-                        <i class="bi bi-star{% if forloop.counter <= review.rating %}-fill text-warning{% endif %}"></i>
-                    {% endfor %}
-                    <p class="text-muted small mb-0">{{ review.created_at|date:"d.m.Y" }}</p>
-                </div>
-            </div>
-            <p class="mb-3 small">{{ review.comment }}</p>
-            <form method="post" action="{% url 'staff:staff_approve_review' review.id %}"
-                  class="d-flex gap-2">
-                {% csrf_token %}
-                {% if not review.is_published %}
-                    <button type="submit" name="action" value="approve"
-                            class="btn btn-success btn-sm">
-                        <i class="bi bi-check-lg me-1"></i>Одобри
-                    </button>
-                {% endif %}
-                {% if not review.is_rejected %}
-                    <button type="submit" name="action" value="disapprove"
-                            class="btn btn-outline-danger btn-sm"
-                            onclick="return confirm('Отхвърли коментара?')">
-                        <i class="bi bi-x-lg me-1"></i>Отхвърли
-                    </button>
-                {% endif %}
-            </form>
-        </div>
-        {% empty %}
-        <p class="text-muted text-center py-5">Няма коментари.</p>
-        {% endfor %}
+                    </td>
+                    <td>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <form method="post" action="{% url 'staff:staff_approve_review' review.id %}" class="d-flex gap-2">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <button type="submit" name="action" value="approve"
+                                        class="btn btn-success btn-sm {% if review.is_published %}invisible{% endif %}"
+                                        {% if review.is_published %}disabled tabindex="-1"{% endif %}>
+                                    Одобри
+                                </button>
+                                <button type="submit" name="action" value="disapprove"
+                                        class="btn btn-outline-danger btn-sm {% if review.is_rejected %}invisible{% endif %}"
+                                        {% if review.is_rejected %}disabled tabindex="-1"{% endif %}
+                                        onclick="return confirm('Отхвърли коментара?')">
+                                    Отхвърли
+                                </button>
+                            </form>
+                            <a href="{% url 'staff:staff_approve_review' review.id %}" class="btn btn-outline-success btn-sm">
+                                Преглед
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">Няма коментари.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% include 'includes/paginator.html' with extra_params="filter="|add:current_filter %}

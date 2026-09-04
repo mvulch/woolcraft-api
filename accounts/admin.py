@@ -2,6 +2,11 @@ from django.contrib import admin
 from .models import CustomUser
 from django.contrib.auth.admin import UserAdmin
 
+def _superuser_only_admin(request):
+    return request.user.is_active and request.user.is_superuser
+
+admin.site.has_permission = _superuser_only_admin
+
 # Register your models here.
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):

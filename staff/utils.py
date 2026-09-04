@@ -1,5 +1,8 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import user_passes_test
 from .models import Notification, NotificationRecipient
+
+superuser_required = user_passes_test(lambda u: u.is_active and u.is_superuser, login_url='accounts:login')
 
 def notify_staff(type, message, link=''):
     """creates notification for the staff users when users trigger it"""

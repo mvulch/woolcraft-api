@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Поръчки с адрес | WoolCraft{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center my-5">
+    <h3 class="fw-bold mb-0">Поръчки с адрес: {{ address.street }}, {{ address.city }}</h3>
+    <a href="{% url 'orders:address_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Моите адреси
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <h5 class="fw-bold mb-3">Поръчки</h5>
+        {% if orders %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Дата</th>
+                        <th>Статус</th>
+                        <th>Сума</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td class="text-muted small">#{{ order.id }}</td>
+                        <td class="text-muted small">{{ order.created_at|date:"d.m.Y" }}</td>
+                        <td>
+                            {% include 'includes/order_status_color.html' %}
+                        </td>
+                        <td>{{ order.total_price }} €</td>
+                        <td>
+                            <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-outline-success btn-sm">
+                                Преглед
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">Няма поръчки с този адрес.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <h5 class="fw-bold mb-3">Персонализирани заявки</h5>
+        {% if custom_requests %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Дата</th>
+                        <th>Статус</th>
+                        <th>Заглавие</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for custom_request in custom_requests %}
+                    <tr>
+                        <td class="text-muted small">#{{ custom_request.id }}</td>
+                        <td class="text-muted small">{{ custom_request.created_at|date:"d.m.Y" }}</td>
+                        <td>
+                            {% include 'includes/custom_requests_color.html' %}
+                        </td>
+                        <td class="fw-medium">{{ custom_request.title }}</td>
+                        <td>
+                            <a href="{% url 'custom_requests:custom_request_detail' custom_request.id %}" class="btn btn-outline-success btn-sm">
+                                Преглед
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">Няма персонализирани заявки с този адрес.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

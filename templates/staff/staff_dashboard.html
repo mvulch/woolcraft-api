@@ -2,38 +2,45 @@
 {% load static %}
 {% block title %}Административен панел | WoolCraft{% endblock %}
 {% block content %}
-<h3 class="h3-center fw-bold my-5 mb-4">Административен панел</h3>
+<div class="h3-center fw-bold my-5 mb-4">
+    <h3 class="h3-center fw-bold mb-4">Административен панел</h3>
+    {% if request.user.is_superuser %}
+    <a href="{% url 'staff:staff_manage_staff' %}" class="btn btn-outline-dark btn-md">
+        <i class="bi bi-people me-1"></i>Управление на персонал
+    </a>
+    {% endif %}
+</div>
 <div class="row justify-content-center">
 
-    <div class="col-6 col-lg-3">
+    <div class="col-6 col-lg-2">
         <div class="card border-0 shadow-sm text-center p-3">
             <i class="bi bi-bell text-primary fs-2 mb-2"></i>
             <h3 class="fw-bold mb-0">{{ staff_notification_count }}</h3>
             <p class="text-muted small mb-0">Нови известия</p>
         </div>
     </div>
-    <div class="col-6 col-lg-3">
+    <div class="col-6 col-lg-2">
         <div class="card border-0 shadow-sm text-center p-3">
             <i class="bi bi-hourglass text-warning fs-2 mb-2"></i>
             <h3 class="fw-bold mb-0">{{ orders }}</h3>
             <p class="text-muted small mb-0">Чакащи поръчки</p>
         </div>
     </div>
-    <div class="col-6 col-lg-3">
+    <div class="col-6 col-lg-2">
         <div class="card border-0 shadow-sm text-center p-3">
-            <i class="bi bi-envelope text-danger fs-2 mb-2"></i>
+            <i class="bi bi-box2-heart text-danger fs-2 mb-2"></i>
             <h3 class="fw-bold mb-0">{{ custom_requests }}</h3>
-            <p class="text-muted small mb-0">Незавършени персонализирани заявки</p>
+            <p class="text-muted small mb-0">Персонализирани заявки</p>
         </div>
     </div>
-    <div class="col-6 col-lg-3">
+    <div class="col-6 col-lg-2">
         <div class="card border-0 shadow-sm text-center p-3">
-            <i class="bi bi-envelope text-danger fs-2 mb-2"></i>
+            <i class="bi bi-envelope text-info fs-2 mb-2"></i>
             <h3 class="fw-bold mb-0">{{ contact_messages }}</h3>
             <p class="text-muted small mb-0">Неприключени дискусии</p>
         </div>
     </div>
-    <div class="col-6 col-lg-3">
+    <div class="col-6 col-lg-2">
         <div class="card border-0 shadow-sm text-center p-3">
             <i class="bi bi-star text-warning fs-2 mb-2"></i>
             <h3 class="fw-bold mb-0">{{ pending_reviews }}</h3>
@@ -62,8 +69,9 @@
                     <div class="text-end">
                         <i class="bi
                         {% if notif_recipient.notification.type == 'NEW_ORDER' %}bi-bag text-success
-                        {% elif notif_recipient.notification.type == 'NEW_CONTACT' %}bi-envelope text-danger
+                        {% elif notif_recipient.notification.type == 'NEW_CONTACT' %}bi-envelope text-info
                         {% elif notif_recipient.notification.type == 'NEW_REVIEW' %}bi-star text-warning
+                        {% elif notif_recipient.notification.type == 'NEW_REQUEST' %}bi-box2-heart text-danger
                         {% else %}bi-bell text-primary
                         {% endif %} mt-1"></i>
 
@@ -92,14 +100,7 @@
 
                     </div>
                     <div class="text-end">
-                        <span class="badge
-                            {% if order.status == 'PAID' %}bg-info
-                            {% elif order.status == 'SHIPPED' %}bg-primary
-                            {% elif order.status == 'DELIVERED' %}bg-success
-                            {% elif order.status == 'CANCELLED' %}bg-danger
-                            {% endif %}">
-                            {{ order.get_status_display }}
-                        </span>
+                        {% include 'includes/order_status_color.html' %}
                         <p class="text-muted small mb-0">{{ order.total_price }} €</p>
                     </div>
                 </div>

@@ -26,7 +26,7 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = ("user", "address", "total_price","status","created_at")
     search_fields = ("address__city","address__country","user__email")
     list_filter = ("status",)
-    readonly_fields = ("created_at",)
+    readonly_fields = ("created_at", "status")
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
