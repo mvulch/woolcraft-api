@@ -91,28 +91,31 @@ def staff_order_detail_view(request, order_id):
     order = get_object_or_404(Order.objects.select_related('user','address').prefetch_related('items__product'),
          id=order_id)
     if request.method == 'POST':
-        new_status = request.POST.get('status')
-        if new_status in dict(Order.OrderStatus.choices):
-            with transaction.atomic():
-                locked_order = Order.objects.select_for_update().get(id=order.id)
-                old_status = locked_order.status
-                if old_status != new_status:
-                    if new_status == Order.OrderStatus.CANCELLED and old_status != Order.OrderStatus.CANCELLED:
-                        locked_order.restock_items()
+        if order.user == request.user:
+            messages.error(request, 'Не можете да променяте статуса на собствената си поръчка.')
+        else:
+            new_status = request.POST.get('status')
+            if new_status in dict(Order.OrderStatus.choices):
+                with transaction.atomic():
+                    locked_order = Order.objects.select_for_update().get(id=order.id)
+                    old_status = locked_order.status
+                    if old_status != new_status:
+                        if new_status == Order.OrderStatus.CANCELLED and old_status != Order.OrderStatus.CANCELLED:
+                            locked_order.restock_items()
 
-                    locked_order.status = new_status
-                    locked_order.save(update_fields=['status', 'updated_at'])
-                    OrderStatusHistory.objects.create(
-                        order=locked_order,
-                        old_status=old_status,
-                        new_status=new_status,
-                        changed_by=request.user,
-                    )
-            order.refresh_from_db()
-            messages.success(request, f'Статусът на поръчка #{order.id} е обновен на {order.get_status_display()}.')
-            notify_user(user=order.user, type=UserNotification.Type.ORDER_STATUS,
-                        message=f'Статусът на поръчка #{order.id} е обновен на {order.get_status_display()}.',
-                        link=reverse('orders:order_detail', args=[order.id]),)
+                        locked_order.status = new_status
+                        locked_order.save(update_fields=['status', 'updated_at'])
+                        OrderStatusHistory.objects.create(
+                            order=locked_order,
+                            old_status=old_status,
+                            new_status=new_status,
+                            changed_by=request.user,
+                        )
+                order.refresh_from_db()
+                messages.success(request, f'Статусът на поръчка #{order.id} е обновен на {order.get_status_display()}.')
+                notify_user(user=order.user, type=UserNotification.Type.ORDER_STATUS,
+                            message=f'Статусът на поръчка #{order.id} е обновен на {order.get_status_display()}.',
+                            link=reverse('orders:order_detail', args=[order.id]),)
         return redirect('staff:staff_order_detail', order_id=order.id)
     context = {'order': order, 'is_staff_view': True, 'timeline': build_order_timeline(order)}
     return render(request, 'orders/order_detail.html', context)
@@ -170,27 +173,30 @@ def reviews_view(request):
 def review_approve_view(request, review_id):
     review = get_object_or_404(ProductReview.objects.select_related('user', 'product__category'), id=review_id)
     if request.method == 'POST':
-        action = request.POST.get('action')
-        if action == 'approve':
-            review.is_published = True
-            review.is_rejected = False
-            review.save(update_fields=['is_published', 'is_rejected'])
-            messages.success(request, f'Коментарът е одобрен.')
-            notify_user(user=review.user, type=UserNotification.Type.REVIEW_APPROVED,
-                        message=f'Отзив #{review.id} за продукт {review.product.name} беше одобрен.',
-                        link=reverse('products:product_detail',
-                                     args=[review.product.category.slug, review.product.slug]),)
-        elif action == 'disapprove':
-            review.is_published = False
-            review.is_rejected = True
-            review.rejection_count = F('rejection_count') + 1
-            review.save(update_fields=['is_published', 'is_rejected', 'rejection_count'])
-            review.refresh_from_db(fields=['rejection_count'])
-            messages.error(request, f'Коментарът е отхвърлен.')
-            notify_user(user=review.user, type=UserNotification.Type.REVIEW_APPROVED,
-                        message=f'Отзив #{review.id} за продукт {review.product.name} беше отхвърлен. '
-                                f'Можете да го редактирате и да го изпратите отново за преглед.',
-                        link=reverse('products:review_edit', args=[review.id]),)
+        if review.user == request.user:
+            messages.error(request, 'Не можете да одобрявате или отхвърляте собствения си коментар.')
+        else:
+            action = request.POST.get('action')
+            if action == 'approve':
+                review.is_published = True
+                review.is_rejected = False
+                review.save(update_fields=['is_published', 'is_rejected'])
+                messages.success(request, f'Коментарът е одобрен.')
+                notify_user(user=review.user, type=UserNotification.Type.REVIEW_APPROVED,
+                            message=f'Отзив #{review.id} за продукт {review.product.name} беше одобрен.',
+                            link=reverse('products:product_detail',
+                                         args=[review.product.category.slug, review.product.slug]),)
+            elif action == 'disapprove':
+                review.is_published = False
+                review.is_rejected = True
+                review.rejection_count = F('rejection_count') + 1
+                review.save(update_fields=['is_published', 'is_rejected', 'rejection_count'])
+                review.refresh_from_db(fields=['rejection_count'])
+                messages.error(request, f'Коментарът е отхвърлен.')
+                notify_user(user=review.user, type=UserNotification.Type.REVIEW_APPROVED,
+                            message=f'Отзив #{review.id} за продукт {review.product.name} беше отхвърлен. '
+                                    f'Можете да го редактирате и да го изпратите отново за преглед.',
+                            link=reverse('products:review_edit', args=[review.id]),)
         next_url = request.POST.get('next')
         if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()},
                                                           require_https=request.is_secure()):
@@ -252,8 +258,14 @@ def toggle_staff_status_view(request, user_id):
         target.save(update_fields=['is_staff'])
         if target.is_staff:
             messages.success(request, f'{target.email} вече е част от персонала.')
+            notify_user(user=target, type=UserNotification.Type.STAFF_STATUS,
+                        message='Вече сте част от екипа на WoolCraft. Може да достъпите административния панел от тук.',
+                        link=reverse('staff:staff_dashboard'), )
         else:
             messages.success(request, f'{target.email} вече не е част от персонала.')
+            notify_user(user=target, type=UserNotification.Type.STAFF_STATUS,
+                        message='Вече не сте част от екипа на WoolCraft и достъпът Ви до административния панел е премахнат.',
+                        link='', )
     query = request.GET.get('q', '')
     params = {}
     if query:

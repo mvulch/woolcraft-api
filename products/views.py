@@ -43,7 +43,8 @@ def product_detail_view(request,category_slug,slug):
                 review.save()
                 notify_staff(type=Notification.Type.NEW_REVIEW,
                              message=f'Нов коментар от {request.user.get_full_name()} за продукт {product_detail}.',
-                             link=reverse('staff:staff_approve_review', args=[review.id]))
+                             link=reverse('staff:staff_approve_review', args=[review.id]),
+                             exclude_user=request.user,)
                 messages.success(request, f'Коментарът е създаден успешно и очаква одобрение от нашия екип.')
                 return redirect('products:product_detail', category_slug=category_slug, slug=slug)
         else:
@@ -143,7 +144,8 @@ def review_edit_view(request, review_id):
             review.save()
             notify_staff(type=Notification.Type.NEW_REVIEW,
                          message=f'Редактиран коментар от {request.user.get_full_name()} за продукт {review.product}.',
-                         link=reverse('staff:staff_approve_review', args=[review.id]))
+                         link=reverse('staff:staff_approve_review', args=[review.id]),
+                         exclude_user=request.user,)
             messages.success(request, 'Отзивът е обновен и изчаква одобрение от нашия екип.')
             return redirect('products:product_detail', category_slug=review.product.category.slug, slug=review.product.slug)
     else:

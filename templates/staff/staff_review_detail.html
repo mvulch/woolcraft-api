@@ -72,6 +72,11 @@
                         Този потребител има общо {{ total_rejections }} отхвърлян{{ total_rejections|pluralize:"е,ия" }} на отзиви (за всички продукти, включително редакции).
                     </p>
                 {% endif %}
+                {% if review.user == user %}
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-info-circle me-1"></i>Не можете да одобрявате или отхвърляте собствения си коментар.
+                    </p>
+                {% else %}
                 <form method="post" action="{% url 'staff:staff_approve_review' review.id %}"
                       class="d-flex flex-column gap-2">
                     {% csrf_token %}
@@ -89,6 +94,7 @@
                         </button>
                     {% endif %}
                 </form>
+                {% endif %}
             </div>
         </div>
     </div>

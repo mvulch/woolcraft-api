@@ -68,13 +68,13 @@
                                 {% csrf_token %}
                                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
                                 <button type="submit" name="action" value="approve"
-                                        class="btn btn-success btn-sm {% if review.is_published %}invisible{% endif %}"
-                                        {% if review.is_published %}disabled tabindex="-1"{% endif %}>
+                                        class="btn btn-success btn-sm {% if review.is_published or review.user == user %}invisible{% endif %}"
+                                        {% if review.is_published or review.user == user %}disabled tabindex="-1"{% endif %}>
                                     Одобри
                                 </button>
                                 <button type="submit" name="action" value="disapprove"
-                                        class="btn btn-outline-danger btn-sm {% if review.is_rejected %}invisible{% endif %}"
-                                        {% if review.is_rejected %}disabled tabindex="-1"{% endif %}
+                                        class="btn btn-outline-danger btn-sm {% if review.is_rejected or review.user == user %}invisible{% endif %}"
+                                        {% if review.is_rejected or review.user == user %}disabled tabindex="-1"{% endif %}
                                         onclick="return confirm('Отхвърли коментара?')">
                                     Отхвърли
                                 </button>

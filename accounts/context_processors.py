@@ -7,7 +7,7 @@ def login_credentials(request):
     return {'form': LoginForm()}
 
 def user_notification_count(request):
-    if request.user.is_authenticated and not request.user.is_staff:
+    if request.user.is_authenticated:
         count = UserNotification.objects.filter(recipient=request.user,is_read=False).count()
         return { 'user_notification_count': count }
     return { 'user_notification_count': 0 }

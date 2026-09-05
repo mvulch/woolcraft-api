@@ -61,13 +61,13 @@
         <h5 class="fw-bold text-center mb-3">Комуникация</h5>
         {% for msg in custom_request.messages.all %}
         <div class="card border-0 shadow-sm mb-3
-            {% if msg.user.is_staff %}border-start border-success border-3
+            {% if msg.user != custom_request.user %}border-start border-success border-3
             {% else %}border-start border-secondary border-3{% endif %}">
             <div class="card-body p-3">
                 <div class="d-flex justify-content-between mb-2">
                     <p class="fw-medium mb-0
-                        {% if msg.user.is_staff %}text-success{% endif %}">
-                        {% if msg.user.is_staff %}
+                        {% if msg.user != custom_request.user %}text-success{% endif %}">
+                        {% if msg.user != custom_request.user %}
                             <i class="bi bi-person-badge me-1"></i>Екипът на WoolCraft
                         {% else %}
                             <i class="bi bi-person me-1"></i>{{ msg.user.get_full_name }}
@@ -86,7 +86,7 @@
         <div class="card border-0 shadow-sm mt-4">
             <div class="card-body p-2">
                 <h5 class="fw-bold mb-3">
-                    {% if user.is_staff %}Отговор{% else %}Добави съобщение{% endif %}
+                    {% if custom_request.user == user %}Добави съобщение{% else %}Отговор{% endif %}
                 </h5>
                 <form method="post">
                     {% csrf_token %}
@@ -112,7 +112,7 @@
         </div>
         {% endif %}
         <!-- price offered -->
-        {% if user.is_staff and custom_request.status == 'PENDING' %}
+        {% if user.is_superuser and custom_request.user != user and custom_request.status == 'PENDING' %}
         <form method="post" class="mt-3">
             {% csrf_token %}
             <input type="hidden" name="action" value="offer_price">
@@ -134,7 +134,7 @@
         {% endif %}
 
         <!-- client accepted -->
-        {% if not user.is_staff and custom_request.status == 'PRICE_OFFERED' %}
+        {% if custom_request.user == user and custom_request.status == 'PRICE_OFFERED' %}
         <div class="alert alert-info mt-3">
             <p class="mb-2">Предложена цена: <strong>{{ custom_request.offered_price }} €</strong></p>
             <div class="d-flex gap-2">
@@ -154,7 +154,7 @@
         {% endif %}
 
         <!-- client disagree -->
-        {% if custom_request.status == 'DECLINED' and user.is_staff %}
+        {% if custom_request.status == 'DECLINED' and custom_request.user != user %}
         <div class="alert alert-warning mt-3">
             <i class="bi bi-info-circle me-1"></i>
             Клиентът не е приел предложената цена. Можете да предложите нова цена след допълнителна комуникация.
@@ -189,7 +189,7 @@
                     <p class="mb-0 text-muted small">{{ custom_request.address.phone }}</p>
                 </div>
                 {% endif %}
-                {% if user.is_staff %}
+                {% if user.is_superuser and custom_request.user != user %}
                 <form method="post" class="mt-3">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="update_status">

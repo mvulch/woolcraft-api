@@ -285,11 +285,15 @@ def payment_success_view(request):
     if not order or order.user_id != request.user.id:
         messages.error(request, 'Плащането не можа да бъде потвърдено. Ако сумата е била удържана, моля, свържете се с нас.')
         return redirect('orders:cart_detail')
+    cart = Cart.objects.filter(user=request.user).first()
+    if cart:
+        update_cart_count(request, cart)
     if created:
         messages.success(request, f'Поръчка #{order.id} беше заплатена успешно.')
         notify_staff(type=Notification.Type.NEW_ORDER,
                      message=f'Поръчка #{order.id} беше заплатена от {request.user.get_full_name()}.',
-                     link=reverse('staff:staff_order_detail', args=[order.id]), )
+                     link=reverse('staff:staff_order_detail', args=[order.id]),
+                     exclude_user=request.user,)
     return redirect('orders:order_detail', order_id=order.id)
 
 @csrf_exempt

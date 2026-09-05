@@ -33,15 +33,9 @@
                         <a class="text-dark fs-5" href="#" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false" title="Профил">
                             <i class="bi bi-person"></i>
-                            {% if staff_notification_count > 0 %}
+                            {% if staff_notification_count > 0 or user_notification_count > 0 %}
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
-                                {{ staff_notification_count }}
-                            </span>
-                            {% endif %}
-
-                            {% if not user.is_staff and user_notification_count > 0 %}
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
-                                {{ user_notification_count }}
+                                {{ staff_notification_count|add:user_notification_count }}
                             </span>
                             {% endif %}
                         </a>
@@ -69,12 +63,12 @@
                                     {% endif %}
                                 </a>
                             </li>
-                            {% else %}
+                            {% endif %}
                             <li>
                                 <a class="dropdown-item py-2 d-flex justify-content-between align-items-center"
                                    href="{% url 'accounts:notifications' %}">
                                     <span>
-                                        <i class="bi bi-speedometer2 me-2"></i>Известия
+                                        <i class="bi bi-bell me-2"></i>Известия
                                     </span>
                                     {% if user_notification_count > 0 %}
                                         <span class="badge rounded-pill bg-danger ms-2">
@@ -83,7 +77,6 @@
                                     {% endif %}
                                 </a>
                             </li>
-                            {% endif %}
                             <li>
                                 <a class="dropdown-item py-2" href="{% url 'orders:order_list' %}">
                                     <i class="bi bi-bag me-2"></i>Моите поръчки

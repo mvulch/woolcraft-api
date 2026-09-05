@@ -37,7 +37,8 @@ def create_contact_view(request):
             messages.success(request,"Съобщението Ви е изпратено успешно.")
             notify_staff(type=Notification.Type.NEW_CONTACT,
                          message=f'Ново запитване от {request.user.get_full_name()} на тема {contact_message.subject}.',
-                         link=reverse('communication:conversation', args=[contact_message.id]),)
+                         link=reverse('communication:contact_detail', args=[contact_message.id]),
+                         exclude_user=request.user,)
 
             return redirect('communication:contact_detail', contact_message_id=contact_message.id)
     else:
@@ -51,15 +52,17 @@ def contact_detail_view(request, contact_message_id):
                                         id=contact_message_id)
     if contact_message.user != request.user and not request.user.is_staff:
         raise Http404("Нямате достъп до това съобщение.")
+    form = ContactMessageReplyForm()
     if request.method == 'POST':
         action = request.POST.get('action')
         if action == 'resolve':
-            contact_message.is_resolved = True
-            contact_message.save()
-            messages.success(request,'Казусът е отбелязан като приключен.')
-            if request.user.is_staff:
+            if request.user.is_staff and contact_message.user != request.user:
+                contact_message.is_resolved = True
+                contact_message.save()
+                messages.success(request,'Казусът е отбелязан като приключен.')
                 return redirect('staff:staff_contact_messages')
-            return redirect('communication:contact_messages_list')
+            messages.error(request, 'Нямате право да приключите този казус.')
+            return redirect('communication:contact_detail', contact_message_id=contact_message_id)
 
         if action == 'reply' and not contact_message.is_resolved:
             form = ContactMessageReplyForm(request.POST)
@@ -68,14 +71,15 @@ def contact_detail_view(request, contact_message_id):
                 reply.user = request.user
                 reply.message = contact_message
                 reply.save()
-                if request.user.is_staff:
+                if request.user == contact_message.user:
+                    notify_staff(type=Notification.Type.NEW_CONTACT,
+                                 message=f'Отговор от {request.user.get_full_name()} на запитване {contact_message.id}.',
+                                 link=reverse('communication:contact_detail', args=[contact_message.id]),
+                                 exclude_user=request.user, )
+                else:
                     notify_user(user=contact_message.user, type=UserNotification.Type.CONTACT_REPLY,
                                 message=f'Получен отговор на съобщение #{contact_message.id}.',
                                 link=reverse('communication:contact_detail', args=[contact_message.id]), )
-                else:
-                    notify_staff(type=Notification.Type.NEW_CONTACT,
-                                 message=f'Отговор от {request.user.get_full_name()} на запитване {contact_message.id}.',
-                                 link=reverse('communication:contact_detail', args=[contact_message.id]), )
 
                 messages.success(request, "Съобщението Ви е добавено успешно.")
                 return redirect('communication:contact_detail', contact_message_id=contact_message_id)
@@ -84,8 +88,6 @@ def contact_detail_view(request, contact_message_id):
             messages.error(request, "Този казус е отбелязан като приключен.")
             return redirect('communication:contact_detail', contact_message_id=contact_message_id)
 
-    else:
-        form = ContactMessageReplyForm()
     context = {
         'contact_message': contact_message,
         'form': form,

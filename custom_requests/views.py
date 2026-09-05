@@ -31,6 +31,7 @@ def custom_request_create_view(request):
                 type=Notification.Type.NEW_REQUEST,
                 message=f'Нова персонализирана заявка #{custom_request.id} от {custom_request.user.get_full_name()}',
                 link=reverse('custom_requests:custom_request_detail', args=[custom_request.id]),
+                exclude_user=request.user,
             )
             messages.success(request, 'Заявката Ви е изпратена успешно и очаква да бъде разгледана от нашия екип.')
             return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
@@ -67,51 +68,63 @@ def custom_request_detail_view(request, request_id):
                 message.user = request.user
                 message.request = custom_request
                 message.save()
-                if request.user.is_staff:
+                if request.user == custom_request.user:
+                    notify_staff(type=Notification.Type.NEW_REQUEST,
+                                 message=f'Нов отговор на заявка #{custom_request.id}',
+                                 link=reverse('custom_requests:custom_request_detail', args=[custom_request.id]),
+                                 exclude_user=request.user, )
+                else:
                     notify_user(user=custom_request.user, type=UserNotification.Type.CUSTOM_REQUEST_MESSAGE,
                                 message=f'Получен отговор на заявка #{custom_request.id}.',
                                 link=reverse('custom_requests:custom_request_detail', args=[custom_request.id]), )
-                else:
-                    notify_staff(type=Notification.Type.NEW_REQUEST,
-                                 message=f'Нов отговор на заявка #{custom_request.id}',
-                                 link=reverse('custom_requests:custom_request_detail', args=[custom_request.id]), )
                 messages.success(request, 'Съобщението е изпратено.')
                 return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
-        elif action == 'update_status' and request.user.is_staff:
-            new_status = request.POST.get('status')
-            if new_status in dict(CustomRequest.Status.choices):
-                custom_request.status = new_status
-                custom_request.save()
-                messages.success(request, 'Статусът е обновен успешно.')
-                notify_user(user=custom_request.user, type=UserNotification.Type.CUSTOM_REQUEST_STATUS,
-                            message=f'Статусът на заявка #{custom_request.id} е сменен на {custom_request.get_status_display()}.',
-                            link=reverse('custom_requests:custom_request_detail', args=[custom_request.id]), )
-
-                return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
+        elif action == 'update_status':
+            if not request.user.is_superuser:
+                messages.error(request, 'Само администратор може да променя статуса на заявката.')
+            elif custom_request.user == request.user:
+                messages.error(request, 'Не можете да променяте статуса на собствена си заявка.')
             else:
-                messages.error(request, 'Невалиден статус.')
+                new_status = request.POST.get('status')
+                if new_status in dict(CustomRequest.Status.choices):
+                    custom_request.status = new_status
+                    custom_request.save()
+                    messages.success(request, 'Статусът е обновен успешно.')
+                    notify_user(user=custom_request.user, type=UserNotification.Type.CUSTOM_REQUEST_STATUS,
+                                message=f'Статусът на заявка #{custom_request.id} е сменен на {custom_request.get_status_display()}.',
+                                link=reverse('custom_requests:custom_request_detail', args=[custom_request.id]), )
 
-        elif action == 'offer_price' and request.user.is_staff:
-            price_form = OfferPriceForm(request.POST)
-            if price_form.is_valid():
-                custom_request.offered_price = price_form.cleaned_data['offered_price']
-                custom_request.status = CustomRequest.Status.PRICE_OFFERED
-                custom_request.save(update_fields=['offered_price','status','updated_at'])
-                notify_user(user=custom_request.user, type=UserNotification.Type.CUSTOM_REQUEST_PRICE,
-                            message=f'Получена ценова оферта за заявка #{custom_request.id}.',
-                            link=reverse('custom_requests:custom_request_detail', args=[custom_request.id]), )
+                    return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
+                else:
+                    messages.error(request, 'Невалиден статус.')
 
-                messages.success(request, 'Цената е предложена.')
-                return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
+        elif action == 'offer_price':
+            if not request.user.is_superuser:
+                messages.error(request, 'Само администратор може да предлага цена по заявката.')
+            elif custom_request.user == request.user:
+                messages.error(request, 'Не можете да предлагате цена за собствената си заявка.')
+            else:
+                price_form = OfferPriceForm(request.POST)
+                if price_form.is_valid():
+                    custom_request.offered_price = price_form.cleaned_data['offered_price']
+                    custom_request.status = CustomRequest.Status.PRICE_OFFERED
+                    custom_request.save(update_fields=['offered_price','status','updated_at'])
+                    notify_user(user=custom_request.user, type=UserNotification.Type.CUSTOM_REQUEST_PRICE,
+                                message=f'Получена ценова оферта за заявка #{custom_request.id}.',
+                                link=reverse('custom_requests:custom_request_detail', args=[custom_request.id]), )
 
-        elif action == 'client_decline' and not request.user.is_staff:
+                    messages.success(request, 'Цената е предложена.')
+                    return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
+
+        elif action == 'client_decline' and custom_request.user == request.user:
             if custom_request.status == CustomRequest.Status.PRICE_OFFERED:
                 custom_request.status = CustomRequest.Status.DECLINED
                 custom_request.save()
                 notify_staff(
                     type=Notification.Type.NEW_REQUEST,
                     message=f'Отказана цена на персонализирана заявка #{custom_request.id} от клиент {custom_request.user.get_full_name()}',
-                    link=reverse('custom_requests:custom_request_detail', args=[custom_request.id]),)
+                    link=reverse('custom_requests:custom_request_detail', args=[custom_request.id]),
+                    exclude_user=request.user,)
                 messages.info(request, 'Отказахте предложената цена.')
                 return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
     context = {
@@ -192,5 +205,6 @@ def custom_request_payment_success_view(request):
         messages.success(request, f'Поръчка #{custom_request.id} беше заплатена успешно. Очаквайте скоро да бъде изработена!')
         notify_staff(type=Notification.Type.NEW_REQUEST,
                  message=f'Персонализирана поръчка #{custom_request.id} беше заплатена от {request.user.get_full_name()}.',
-                 link=reverse('custom_requests:custom_request_detail', args=[custom_request.id]),)
+                 link=reverse('custom_requests:custom_request_detail', args=[custom_request.id]),
+                 exclude_user=request.user,)
     return redirect('custom_requests:custom_request_detail', request_id=custom_request.id)
